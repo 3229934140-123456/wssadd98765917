@@ -1,0 +1,334 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 180rpx;
+}
+
+.stepContainer {
+  padding: $spacing-md $page-padding;
+}
+
+.content {
+  padding: 0 $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.suggestionCard {
+  border-radius: $radius-xl;
+  padding: $spacing-xl $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &.normal {
+    background: linear-gradient(135deg, rgba($color-success, 0.1) 0%, rgba($color-success, 0.05) 100%);
+    border: 2rpx solid rgba($color-success, 0.2);
+  }
+
+  &.remark {
+    background: linear-gradient(135deg, rgba($color-warning, 0.1) 0%, rgba($color-warning, 0.05) 100%);
+    border: 2rpx solid rgba($color-warning, 0.2);
+  }
+
+  &.reject {
+    background: linear-gradient(135deg, rgba($color-error, 0.1) 0%, rgba($color-error, 0.05) 100%);
+    border: 2rpx solid rgba($color-error, 0.2);
+  }
+}
+
+.suggestionIcon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  margin: 0 auto $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+
+  .normal & {
+    background: $color-success;
+  }
+
+  .remark & {
+    background: $color-warning;
+  }
+
+  .reject & {
+    background: $color-error;
+  }
+}
+
+.suggestionTitle {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-xs;
+
+  .normal & {
+    color: $color-success;
+  }
+
+  .remark & {
+    color: $color-warning;
+  }
+
+  .reject & {
+    color: $color-error;
+  }
+}
+
+.suggestionDesc {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.summaryCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+}
+
+.reasonList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.reasonItem {
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-sm;
+}
+
+.reasonIcon {
+  margin-right: $spacing-sm;
+  font-size: $font-size-md;
+}
+
+.reasonText {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.5;
+}
+
+.productInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  margin-top: $spacing-md;
+}
+
+.productLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.productName {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  @include text-ellipsis;
+  max-width: 400rpx;
+  text-align: right;
+}
+
+.remarkCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.remarkInput {
+  width: 100%;
+  min-height: 160rpx;
+  padding: $spacing-md;
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  border: none;
+  outline: none;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.remarkHint {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+  text-align: right;
+}
+
+.noticeCard {
+  background: rgba($color-primary, 0.05);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  border: 2rpx solid rgba($color-primary, 0.1);
+}
+
+.noticeTitle {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.noticeIcon {
+  margin-right: $spacing-xs;
+}
+
+.noticeList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.noticeItem {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.noticeDot {
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: $radius-round;
+  background: $color-primary;
+  margin-right: $spacing-sm;
+}
+
+.successMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.successContent {
+  width: 600rpx;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xxl $spacing-xl;
+  text-align: center;
+}
+
+.successIcon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  background: $color-success;
+  margin: 0 auto $spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+  color: $color-text-white;
+}
+
+.successTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.successDesc {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-xl;
+}
+
+.successBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.submitBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.reject {
+    background: linear-gradient(135deg, $color-error 0%, lighten($color-error, 10%) 100%);
+  }
+}
+
+.backBtn {
+  @include button-reset;
+  padding: 0 $spacing-lg;
+  height: $button-height-lg;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+}

@@ -1,0 +1,237 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.header {
+  margin-bottom: $spacing-lg;
+}
+
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-round;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+.latestTempRow {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+}
+
+.latestTempLabel {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.latestTempValue {
+  font-size: 56rpx;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+}
+
+.tempUnit {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-medium;
+}
+
+.tempBarContainer {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-md 0;
+}
+
+.tempBar {
+  position: relative;
+  height: 16rpx;
+  border-radius: $radius-round;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: $spacing-sm;
+}
+
+.tempBarSegment {
+  height: 100%;
+}
+
+.tempBarNormal {
+  background: linear-gradient(90deg, $color-temp-normal 0%, lighten($color-temp-normal, 10%) 100%);
+}
+
+.tempBarWarning {
+  background: linear-gradient(90deg, $color-temp-warning 0%, lighten($color-temp-warning, 10%) 100%);
+}
+
+.tempBarOver {
+  background: linear-gradient(90deg, $color-temp-over 0%, lighten($color-temp-over, 10%) 100%);
+}
+
+.tempIndicator {
+  position: absolute;
+  top: 50%;
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: $radius-round;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 4rpx rgba(255, 255, 255, 0.9), 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.tempLabels {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tempLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statsGrid {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md 0;
+  border-top: 1rpx solid $color-divider;
+  border-bottom: 1rpx solid $color-divider;
+  margin-bottom: $spacing-md;
+}
+
+.statItem {
+  flex: 1;
+  text-align: center;
+}
+
+.statLabel {
+  display: block;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.statValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.warningSection {
+  background: rgba($color-error, 0.05);
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.warningHeader {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  gap: $spacing-sm;
+}
+
+.warningIcon {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warningTitle {
+  flex: 1;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-error;
+}
+
+.expandIcon {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.warningDetails {
+  padding: 0 $spacing-md $spacing-md;
+}
+
+.warningItem {
+  background: $color-bg-card;
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.warningItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.warningItemTime {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.warningItemDuration {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.warningItemStats {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.warningStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.warningStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 2rpx;
+}
+
+.warningStatValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-error;
+}
+
+.noticeSection {
+  background: rgba($color-warning, 0.08);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  border-left: 6rpx solid $color-warning;
+}
+
+.noticeText {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  line-height: 1.5;
+}

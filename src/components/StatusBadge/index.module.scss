@@ -1,0 +1,30 @@
+@use '@/styles/variables.scss' as *;
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+
+  &.sm {
+    padding: 4rpx $spacing-sm;
+  }
+}
+
+.dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $radius-round;
+  margin-right: $spacing-xs;
+}
+
+.text {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  line-height: 1.4;
+
+  .sm & {
+    font-size: $font-size-xs;
+  }
+}

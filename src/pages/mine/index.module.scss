@@ -1,0 +1,165 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-xxl $page-padding;
+  border-radius: 0 0 $radius-xl $radius-xl;
+  box-shadow: 0 4rpx 20rpx rgba($color-primary, 0.25);
+  margin-bottom: $spacing-md;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: $radius-round;
+  background: rgba($color-text-white, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56rpx;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+  border: 4rpx solid rgba($color-text-white, 0.3);
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.userName {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.userRole {
+  display: inline-block;
+  padding: 4rpx $spacing-sm;
+  background: rgba($color-text-white, 0.2);
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+}
+
+.employeeId {
+  font-size: $font-size-sm;
+  color: rgba($color-text-white, 0.8);
+}
+
+.storeInfo {
+  display: flex;
+  align-items: center;
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  background: rgba($color-text-white, 0.1);
+  border-radius: $radius-md;
+}
+
+.storeIcon {
+  font-size: 36rpx;
+  margin-right: $spacing-sm;
+}
+
+.storeDetails {
+  flex: 1;
+}
+
+.storeName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-white;
+  margin-bottom: 2rpx;
+}
+
+.storeType {
+  font-size: $font-size-xs;
+  color: rgba($color-text-white, 0.8);
+}
+
+.section {
+  background: $color-bg-card;
+  margin: $spacing-md $page-padding;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.menuList {
+  padding: 0 $spacing-lg;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg 0;
+  border-bottom: 1rpx solid $color-divider;
+  transition: all $transition-base;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    opacity: 0.7;
+    background: $color-bg-hover;
+    margin: 0 -$spacing-lg;
+    padding-left: $spacing-lg;
+    padding-right: $spacing-lg;
+  }
+}
+
+.menuIcon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-md;
+  background: rgba($color-primary, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  margin-right: $spacing-md;
+}
+
+.menuContent {
+  flex: 1;
+}
+
+.menuLabel {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.menuArrow {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+}
+
+.footer {
+  text-align: center;
+  padding: $spacing-xl $page-padding $spacing-xxl;
+}
+
+.version {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}

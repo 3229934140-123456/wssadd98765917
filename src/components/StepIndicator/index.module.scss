@@ -1,0 +1,75 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg $spacing-lg;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stepCircle {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: $radius-round;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-sm;
+  transition: all $transition-base;
+
+  &.active {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    box-shadow: 0 4rpx 12rpx rgba($color-primary, 0.3);
+  }
+
+  &.completed {
+    background: $color-success;
+  }
+}
+
+.stepNumber {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-tertiary;
+  line-height: 1;
+
+  .active &,
+  .completed & {
+    color: $color-text-white;
+  }
+}
+
+.stepLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  transition: all $transition-base;
+
+  &.activeLabel {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.stepLine {
+  flex: 1;
+  height: 4rpx;
+  background: $color-divider;
+  margin: 0 $spacing-sm;
+  margin-bottom: $spacing-xl;
+  transition: all $transition-base;
+
+  &.lineCompleted {
+    background: $color-success;
+  }
+}

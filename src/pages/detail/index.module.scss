@@ -1,0 +1,390 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 40rpx;
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.statusCard {
+  border-radius: $radius-xl;
+  padding: $spacing-xl $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+
+  &.normal {
+    background: linear-gradient(135deg, rgba($color-success, 0.1) 0%, rgba($color-success, 0.05) 100%);
+    border: 2rpx solid rgba($color-success, 0.2);
+  }
+
+  &.remark {
+    background: linear-gradient(135deg, rgba($color-warning, 0.1) 0%, rgba($color-warning, 0.05) 100%);
+    border: 2rpx solid rgba($color-warning, 0.2);
+  }
+
+  &.reject {
+    background: linear-gradient(135deg, rgba($color-error, 0.1) 0%, rgba($color-error, 0.05) 100%);
+    border: 2rpx solid rgba($color-error, 0.2);
+  }
+}
+
+.statusIcon {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  margin: 0 auto $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56rpx;
+
+  .normal & {
+    background: $color-success;
+  }
+
+  .remark & {
+    background: $color-warning;
+  }
+
+  .reject & {
+    background: $color-error;
+  }
+}
+
+.statusTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  margin-bottom: $spacing-xs;
+
+  .normal & {
+    color: $color-success;
+  }
+
+  .remark & {
+    color: $color-warning;
+  }
+
+  .reject & {
+    color: $color-error;
+  }
+}
+
+.statusTime {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.sectionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.auditId {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.infoLabel {
+  width: 160rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.productName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.productType {
+  display: inline-block;
+  margin-left: $spacing-sm;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 2rpx $spacing-xs;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-normal;
+}
+
+.tempZoneValue {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.tempStats {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.tempStat {
+  flex: 1;
+  text-align: center;
+}
+
+.tempStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.tempStatValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+
+  &.over {
+    color: $color-error;
+  }
+}
+
+.overTempList {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.overTempTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-error;
+  margin-bottom: $spacing-sm;
+}
+
+.overTempItem {
+  background: rgba($color-error, 0.05);
+  border-radius: $radius-sm;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.overTempTime {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.overTempDuration {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.overTempStats {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.overTempStat {
+  display: flex;
+  flex-direction: column;
+}
+
+.overTempStatLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.overTempStatValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-error;
+}
+
+.photoSection {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.photoItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.photoLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.photoImage {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photoPlaceholder {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.photoUploaded {
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-md;
+}
+
+.abnormalList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.abnormalItem {
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  border-radius: $radius-sm;
+  background: $color-bg-hover;
+
+  &.selected {
+    background: rgba($color-error, 0.08);
+  }
+
+  &.selectedNormal {
+    background: rgba($color-success, 0.08);
+  }
+}
+
+.checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: $radius-xs;
+  border: 2rpx solid $color-border;
+  margin-right: $spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-card;
+
+  .selected & {
+    background: $color-error;
+    border-color: $color-error;
+  }
+
+  .selectedNormal & {
+    background: $color-success;
+    border-color: $color-success;
+  }
+}
+
+.checkmark {
+  color: $color-text-white;
+  font-size: 20rpx;
+  font-weight: $font-weight-bold;
+  line-height: 1;
+}
+
+.abnormalLabel {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.resultSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.resultRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+
+  &:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+.resultLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.resultValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.remarkValue {
+  color: $color-text-secondary;
+}
+
+.loading {
+  text-align: center;
+  padding: $spacing-xxl;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+}
+
+.empty {
+  text-align: center;
+  padding: $spacing-xxl;
+  color: $color-text-tertiary;
+  font-size: $font-size-md;
+}

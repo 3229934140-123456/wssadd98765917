@@ -1,0 +1,258 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 180rpx;
+}
+
+.stepContainer {
+  padding: $spacing-md $page-padding;
+}
+
+.content {
+  padding: 0 $page-padding;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.scanPrompt {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xxl $spacing-lg;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.scanIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.6;
+}
+
+.scanTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.scanDesc {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xl;
+  line-height: 1.5;
+}
+
+.scanBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 8rpx 24rpx rgba($color-primary, 0.35);
+  transition: all $transition-base;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.scanBtnIcon {
+  font-size: $font-size-xl;
+}
+
+.manualInput {
+  margin-top: $spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+}
+
+.manualText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.manualLink {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.waybillCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.cardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.waybillCode {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.infoRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.infoLabel {
+  width: 160rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
+.infoValue {
+  flex: 1;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.tempZoneValue {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.productName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.productType {
+  display: inline-block;
+  margin-left: $spacing-sm;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: rgba($color-primary, 0.1);
+  padding: 2rpx $spacing-xs;
+  border-radius: $radius-xs;
+  font-weight: $font-weight-normal;
+}
+
+.loadingMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loadingContent {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl $spacing-xxl;
+  text-align: center;
+}
+
+.loadingSpinner {
+  width: 64rpx;
+  height: 64rpx;
+  border: 6rpx solid $color-divider;
+  border-top-color: $color-primary;
+  border-radius: $radius-round;
+  animation: spin 1s linear infinite;
+  margin: 0 auto $spacing-md;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+}
+
+.nextBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-button;
+  color: $color-text-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.disabled {
+    background: $color-border;
+    color: $color-text-disabled;
+    box-shadow: none;
+  }
+}
+
+.backBtn {
+  @include button-reset;
+  padding: 0 $spacing-lg;
+  height: $button-height-lg;
+  background: $color-bg-hover;
+  border-radius: $radius-button;
+  color: $color-text-secondary;
+  font-size: $font-size-md;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+}

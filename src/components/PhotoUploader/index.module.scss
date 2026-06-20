@@ -1,0 +1,101 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-xs;
+}
+
+.label {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.uploadedTag {
+  font-size: $font-size-xs;
+  color: $color-success;
+  background: rgba($color-success, 0.1);
+  padding: 4rpx $spacing-sm;
+  border-radius: $radius-round;
+}
+
+.description {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+}
+
+.uploadArea {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+}
+
+.uploadBtn {
+  @include button-reset;
+  width: 100%;
+  height: 100%;
+  background: $color-bg-hover;
+  border: 2rpx dashed $color-border;
+  border-radius: $radius-md;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  transition: all $transition-base;
+
+  &:active {
+    background: $color-border;
+    transform: scale(0.98);
+  }
+}
+
+.uploadIcon {
+  font-size: 64rpx;
+  opacity: 0.6;
+}
+
+.uploadBtnText {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+}
+
+.previewContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+}
+
+.previewMask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72rpx;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.previewText {
+  font-size: $font-size-sm;
+  color: $color-text-white;
+}
