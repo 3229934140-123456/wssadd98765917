@@ -1,4 +1,7 @@
-import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord } from '@/types/audit'
+import Taro from '@tarojs/taro'
+import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord, SyncStatus } from '@/types/audit'
+
+const STORAGE_KEY = 'cold_chain_audit_records_v1'
 
 const generateTempRecords = (baseTemp: number, tempMin: number, tempMax: number, hasOver: boolean, hasWarning: boolean): TempRecord[] => {
   const records = []
@@ -63,6 +66,29 @@ const generateOverTempDetails = (hasOver: boolean, tempMax: number): OverTempDet
     maxTemperature: Math.round(overMax * 10) / 10,
     avgTemperature: Math.round((tempMax + 5) * 10) / 10
   }]
+}
+
+const loadRecordsFromStorage = async (): AuditRecord[] | null => {
+  try {
+    const res = await Taro.getStorage({ key: STORAGE_KEY })
+    if (res && res.data && Array.isArray(res.data)) {
+      console.log('[MockData] 从本地存储加载记录成功，共', res.data.length, '条')
+      return res.data as AuditRecord[]
+    }
+  } catch (e) {
+    console.log('[MockData] 本地存储无历史记录，使用默认数据')
+  }
+  return null
+}
+
+const saveRecordsToStorage = async (records: AuditRecord[]): void => {
+  try {
+    Taro.setStorage({ key: STORAGE_KEY, data: records }).catch(err => {
+      console.warn('[MockData] 保存失败:', err)
+    })
+  } catch (e) {
+    console.warn('[MockData] 保存本地存储异常:', e)
+  }
 }
 
 export const mockAbnormalItems: AbnormalItem[] = [
@@ -209,55 +235,90 @@ const vehicles = ['沪A·D85263', '粤B·K72891', '京A·M35628', '浙A·L90234'
 const statuses: Array<'normal' | 'remark' | 'reject'> = ['normal', 'normal', 'remark', 'normal', 'reject', 'normal', 'normal', 'remark', 'normal', 'normal']
 const stores = ['上海五角场店', '上海陆家嘴店', '上海徐家汇店', '上海静安寺店', '上海虹桥店']
 
-let auditRecords: AuditRecord[] = productNames.map((name, index) => {
-  const hasOver = statuses[index] !== 'normal'
-  const tempMin = index % 2 === 0 ? 0 : -20
-  const tempMax = index % 2 === 0 ? 4 : -15
-  const baseTemp = index % 2 === 0 ? 2.5 : -17
-  const records = generateTempRecords(baseTemp, tempMin, tempMax, hasOver, hasOver)
-  const summary = generateSummary(records)
-  const now = new Date()
-  const createTime = new Date(now.getTime() - (index + 1) * 3600 * 1000)
-  
-  return {
-    id: `AUD${20240621}${String(index + 1).padStart(4, '0')}`,
-    waybillInfo: {
-      waybillCode: `YL20240621${String(index + 1).padStart(4, '0')}`,
-      productName: name,
-      productType: index % 2 === 0 ? '冷鲜肉' : '冻品',
-      requiredTempZone: index % 2 === 0 ? '0-4℃冷藏区' : '-18℃冷冻区',
-      tempMin,
-      tempMax,
-      warehouse: warehouses[index % warehouses.length],
-      estimatedArrivalTime: new Date(createTime.getTime() - 30 * 60000).toISOString(),
-      actualArrivalTime: createTime.toISOString(),
-      vehicleNo: vehicles[index % vehicles.length],
-      driverName: ['张师傅', '李师傅', '王师傅', '刘师傅', '陈师傅'][index % 5],
-      driverPhone: '138****5678'
-    },
-    tempSummary: summary,
-    overTempDetails: generateOverTempDetails(hasOver, tempMax),
-    photos: [
-      { type: 'doorSeal', url: '', uploadTime: createTime.toISOString() },
-      { type: 'outerPackage', url: '', uploadTime: createTime.toISOString() },
-      { type: 'tempGun', url: '', uploadTime: createTime.toISOString() }
-    ],
-    abnormalItems: mockAbnormalItems.map(item => ({
-      ...item,
-      value: statuses[index] === 'reject' && item.key !== 'normal'
-    })),
-    signResult: {
-      suggestion: statuses[index],
-      suggestionLabel: statuses[index] === 'normal' ? '正常签收' : statuses[index] === 'remark' ? '备注签收' : '拒收待复核',
-      remark: statuses[index] === 'remark' ? '运输途中短暂超温，货品外观正常' : statuses[index] === 'reject' ? '外箱软化严重，有血水渗出' : '',
-      operator: '收货员小王',
-      operateTime: createTime.toISOString()
-    },
-    status: statuses[index],
-    createTime: createTime.toISOString(),
-    storeName: stores[index % stores.length]
+const buildDefaultRecords = (): AuditRecord[] => {
+  return productNames.map((name, index) => {
+    const hasOver = statuses[index] !== 'normal'
+    const tempMin = index % 2 === 0 ? 0 : -20
+    const tempMax = index % 2 === 0 ? 4 : -15
+    const baseTemp = index % 2 === 0 ? 2.5 : -17
+    const records = generateTempRecords(baseTemp, tempMin, tempMax, hasOver, hasOver)
+    const summary = generateSummary(records)
+    const now = new Date()
+    const createTime = new Date(now.getTime() - (index + 1) * 3600 * 1000)
+    
+    const hasSyncFailed = index === 2 || index === 4
+    
+    return {
+      id: `AUD${20240621}${String(index + 1).padStart(4, '0')}`,
+      waybillInfo: {
+        waybillCode: `YL20240621${String(index + 1).padStart(4, '0')}`,
+        productName: name,
+        productType: index % 2 === 0 ? '冷鲜肉' : '冻品',
+        requiredTempZone: index % 2 === 0 ? '0-4℃冷藏区' : '-18℃冷冻区',
+        tempMin,
+        tempMax,
+        warehouse: warehouses[index % warehouses.length],
+        estimatedArrivalTime: new Date(createTime.getTime() - 30 * 60000).toISOString(),
+        actualArrivalTime: createTime.toISOString(),
+        vehicleNo: vehicles[index % vehicles.length],
+        driverName: ['张师傅', '李师傅', '王师傅', '刘师傅', '陈师傅'][index % 5],
+        driverPhone: '138****5678'
+      },
+      tempSummary: summary,
+      overTempDetails: generateOverTempDetails(hasOver, tempMax),
+      photos: [
+        { type: 'doorSeal', url: '', uploadTime: createTime.toISOString() },
+        { type: 'outerPackage', url: '', uploadTime: createTime.toISOString() },
+        { type: 'tempGun', url: '', uploadTime: createTime.toISOString() }
+      ],
+      abnormalItems: mockAbnormalItems.map(item => ({
+        ...item,
+        value: statuses[index] === 'reject' && item.key !== 'normal'
+      })),
+      signResult: {
+        suggestion: statuses[index],
+        suggestionLabel: statuses[index] === 'normal' ? '正常签收' : statuses[index] === 'remark' ? '备注签收' : '拒收待复核',
+        remark: statuses[index] === 'remark' ? '运输途中短暂超温，货品外观正常' : statuses[index] === 'reject' ? '外箱软化严重，有血水渗出' : '',
+        operator: mockUserInfo.name,
+        operateTime: createTime.toISOString(),
+        syncToLogistics: hasSyncFailed ? 'failed' : 'success',
+        syncToQuality: index === 4 ? 'failed' : 'success'
+      },
+      status: statuses[index],
+      createTime: createTime.toISOString(),
+      storeName: stores[index % stores.length]
+    }
+  })
+}
+
+let auditRecords: AuditRecord[] = buildDefaultRecords()
+let storageInitialized = false
+let pendingStorageSave = false
+
+const initFromStorage = async (): Promise<void> => {
+  if (storageInitialized) return
+  storageInitialized = true
+  const stored = await loadRecordsFromStorage()
+  if (stored && stored.length > 0) {
+    auditRecords = stored
+    console.log('[MockData] 使用本地存储记录，共', auditRecords.length, '条')
+  } else {
+    auditRecords = buildDefaultRecords()
+    console.log('[MockData] 使用默认示例记录，共', auditRecords.length, '条')
+    scheduleSave()
   }
-})
+}
+
+const scheduleSave = (): void => {
+  if (pendingStorageSave) return
+  pendingStorageSave = true
+  Promise.resolve().then(() => {
+    pendingStorageSave = false
+    saveRecordsToStorage(auditRecords)
+  })
+}
+
+void initFromStorage()
 
 export const getAuditRecords = (): AuditRecord[] => {
   return [...auditRecords].sort((a, b) => 
@@ -265,8 +326,65 @@ export const getAuditRecords = (): AuditRecord[] => {
   )
 }
 
+export interface SearchQuery {
+  keyword?: string
+  status?: 'normal' | 'remark' | 'reject' | 'syncFailed' | 'all'
+}
+
+export const searchAuditRecords = (query: SearchQuery): AuditRecord[] => {
+  const { keyword = '', status = 'all' } = query
+  const kw = keyword.trim().toLowerCase()
+  
+  let list = getAuditRecords()
+  
+  if (status !== 'all') {
+    if (status === 'syncFailed') {
+      list = list.filter(r => 
+        r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed'
+      )
+    } else {
+      list = list.filter(r => r.status === status)
+    }
+  }
+  
+  if (kw) {
+    list = list.filter(r => 
+      r.waybillInfo.waybillCode.toLowerCase().includes(kw) ||
+      r.waybillInfo.productName.toLowerCase().includes(kw) ||
+      r.storeName.toLowerCase().includes(kw)
+    )
+  }
+  
+  return list
+}
+
 export const addAuditRecord = (record: AuditRecord): void => {
   auditRecords.unshift(record)
+  scheduleSave()
+  console.log('[MockData] 新增记录，当前总数：', auditRecords.length)
+}
+
+export const getAuditRecordById = (id: string): AuditRecord | undefined => {
+  return auditRecords.find(r => r.id === id)
+}
+
+export const updateRecordSyncStatus = (
+  id: string,
+  field: 'syncToLogistics' | 'syncToQuality',
+  status: SyncStatus
+): AuditRecord | null => {
+  const idx = auditRecords.findIndex(r => r.id === id)
+  if (idx === -1) return null
+  auditRecords[idx] = {
+    ...auditRecords[idx],
+    signResult: {
+      ...auditRecords[idx].signResult,
+      [field]: status
+    }
+  }
+  scheduleSave()
+  console.log('[MockData] 更新同步状态:', id, field, status)
+  return auditRecords[idx]
 }
 
 export const mockUserInfo = {

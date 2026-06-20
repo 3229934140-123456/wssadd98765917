@@ -72,15 +72,15 @@
 }
 
 .tempBarNormal {
-  background: linear-gradient(90deg, $color-temp-normal 0%, lighten($color-temp-normal, 10%) 100%);
+  background: linear-gradient(90deg, $color-temp-normal 0%, #34c759 100%);
 }
 
 .tempBarWarning {
-  background: linear-gradient(90deg, $color-temp-warning 0%, lighten($color-temp-warning, 10%) 100%);
+  background: linear-gradient(90deg, $color-temp-warning 0%, #ffa94d 100%);
 }
 
 .tempBarOver {
-  background: linear-gradient(90deg, $color-temp-over 0%, lighten($color-temp-over, 10%) 100%);
+  background: linear-gradient(90deg, $color-temp-over 0%, #ff7875 100%);
 }
 
 .tempIndicator {

@@ -412,3 +412,60 @@
   color: $color-error !important;
   font-weight: $font-weight-medium;
 }
+
+.resultValueRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  flex: 1;
+  justify-content: flex-end;
+
+  .resultValue {
+    max-width: none;
+  }
+}
+
+.retryBtn {
+  @include button-reset;
+  margin: 0;
+  padding: 0 $spacing-sm !important;
+  height: 40rpx;
+  line-height: 40rpx;
+  min-height: 40rpx !important;
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  transition: all $transition-base;
+
+  &:active {
+    background: rgba($color-primary, 0.2);
+  }
+
+  &::after {
+    border: none !important;
+  }
+}
+
+.syncSectionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.syncTip {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.syncTipIcon {
+  font-size: $font-size-xs;
+}
+
+.syncTipText {
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
