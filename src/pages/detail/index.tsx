@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { View, Text, Image } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import StatusBadge from '@/components/StatusBadge'
-import { mockAuditRecords } from '@/data/mockData'
+import { getAuditRecords } from '@/data/mockData'
 import { formatTime, formatFullDateTime, getSignStatusLabel } from '@/utils/temperature'
 import type { AuditRecord } from '@/types/audit'
 
 const DetailPage: React.FC = () => {
   const [record, setRecord] = useState<AuditRecord | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    const pages = Taro.getCurrentPages()
-    const currentPage = pages[pages.length - 1]
-    const id = (currentPage?.options as { id?: string })?.id || ''
+    const id = router.params.id || ''
     
     console.log('[Detail] 查看记录:', id)
     
@@ -23,7 +22,8 @@ const DetailPage: React.FC = () => {
       setLoading(true)
       try {
         await new Promise(resolve => setTimeout(resolve, 300))
-        const found = mockAuditRecords.find(r => r.id === id)
+        const allRecords = getAuditRecords()
+        const found = allRecords.find(r => r.id === id)
         if (found) {
           setRecord(found)
         }
@@ -35,7 +35,7 @@ const DetailPage: React.FC = () => {
     }
     
     loadRecord()
-  }, [])
+  }, [router.params.id])
 
   const handleImagePreview = useCallback((url: string) => {
     if (url) {
@@ -284,6 +284,34 @@ const DetailPage: React.FC = () => {
               {formatFullDateTime(record.signResult.operateTime)}
             </Text>
           </View>
+          {(record.signResult.syncToLogistics || record.signResult.syncToQuality) && (
+            <>
+              <View className={styles.syncDivider} />
+              <Text className={styles.syncSectionTitle}>信息同步状态</Text>
+              <View className={styles.resultRow}>
+                <Text className={styles.resultLabel}>物流客服</Text>
+                <Text className={classnames(
+                  styles.resultValue,
+                  record.signResult.syncToLogistics === 'success' && styles.syncSuccessText,
+                  record.signResult.syncToLogistics === 'failed' && styles.syncFailedText
+                )}>
+                  {record.signResult.syncToLogistics === 'success' ? '✓ 已同步' :
+                   record.signResult.syncToLogistics === 'failed' ? '✗ 同步失败' : '同步中'}
+                </Text>
+              </View>
+              <View className={styles.resultRow}>
+                <Text className={styles.resultLabel}>品控人员</Text>
+                <Text className={classnames(
+                  styles.resultValue,
+                  record.signResult.syncToQuality === 'success' && styles.syncSuccessText,
+                  record.signResult.syncToQuality === 'failed' && styles.syncFailedText
+                )}>
+                  {record.signResult.syncToQuality === 'success' ? '✓ 已同步' :
+                   record.signResult.syncToQuality === 'failed' ? '✗ 同步失败' : '同步中'}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
       </View>
     </View>

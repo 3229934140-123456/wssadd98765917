@@ -6,13 +6,15 @@ import type {
   CheckPhoto,
   AbnormalItem,
   SignResult,
-  AuditStep
+  AuditStep,
+  AuditRecord,
+  SyncStatus
 } from '@/types/audit'
 import {
-  mockWaybillInfo,
-  mockTempSummary,
-  mockOverTempDetails,
-  mockAbnormalItems
+  getWaybillByCode,
+  mockAbnormalItems,
+  addAuditRecord,
+  mockUserInfo
 } from '@/data/mockData'
 import { calculateSuggestion, getSignStatusLabel } from '@/utils/temperature'
 
@@ -28,7 +30,11 @@ interface AuditContextType {
   setCurrentStep: (step: AuditStep) => void
   uploadPhoto: (type: CheckPhoto['type'], url: string) => void
   toggleAbnormalItem: (key: string) => void
-  submitSignResult: (remark?: string) => Promise<boolean>
+  submitSignResult: (remark?: string) => Promise<{
+    success: boolean
+    syncToLogistics: SyncStatus
+    syncToQuality: SyncStatus
+  }>
   resetAudit: () => void
 }
 
@@ -46,6 +52,11 @@ interface AuditProviderProps {
   children: ReactNode
 }
 
+const simulateSync = async (failRate: number = 0.15): Promise<SyncStatus> => {
+  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 800))
+  return Math.random() < failRate ? 'failed' : 'success'
+}
+
 export const AuditProvider: React.FC<AuditProviderProps> = ({ children }) => {
   const [currentStep, setCurrentStep] = useState<AuditStep>('scan')
   const [waybillInfo, setWaybillInfo] = useState<WaybillInfo | null>(null)
@@ -57,15 +68,27 @@ export const AuditProvider: React.FC<AuditProviderProps> = ({ children }) => {
 
   const scanWaybill = useCallback(async (code: string): Promise<boolean> => {
     console.log('[Audit] 扫描运单码:', code)
+    const trimmed = code.trim()
+    if (!trimmed) {
+      console.warn('[Audit] 运单码为空')
+      return false
+    }
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setWaybillInfo(mockWaybillInfo)
-      setTempSummary(mockTempSummary)
-      setOverTempDetails(mockOverTempDetails)
+      await new Promise(resolve => setTimeout(resolve, 800))
+      const data = getWaybillByCode(trimmed)
+      if (!data) {
+        console.warn('[Audit] 未找到运单信息:', trimmed)
+        return false
+      }
+      
+      setWaybillInfo(data.waybillInfo)
+      setTempSummary(data.tempSummary)
+      setOverTempDetails(data.overTempDetails)
       setAbnormalItems(mockAbnormalItems.map(item => ({ ...item, value: false })))
       setPhotos([])
       setSignResult(null)
-      console.log('[Audit] 运单信息获取成功')
+      console.log('[Audit] 运单信息获取成功:', data.waybillInfo.productName)
       return true
     } catch (error) {
       console.error('[Audit] 运单信息获取失败:', error)
@@ -113,35 +136,70 @@ export const AuditProvider: React.FC<AuditProviderProps> = ({ children }) => {
     })
   }, [])
 
-  const submitSignResult = useCallback(async (remark?: string): Promise<boolean> => {
+  const submitSignResult = useCallback(async (remark?: string): Promise<{
+    success: boolean
+    syncToLogistics: SyncStatus
+    syncToQuality: SyncStatus
+  }> => {
     console.log('[Audit] 提交签收结果')
+    const defaultResult = {
+      success: false,
+      syncToLogistics: 'pending' as SyncStatus,
+      syncToQuality: 'pending' as SyncStatus
+    }
+
     try {
-      if (!tempSummary) {
-        console.error('[Audit] 缺少温度数据')
-        return false
+      if (!tempSummary || !waybillInfo) {
+        console.error('[Audit] 缺少必要数据')
+        return defaultResult
       }
       
       const suggestion = calculateSuggestion(tempSummary, abnormalItems)
+      const operateTime = new Date().toISOString()
+      
+      const [syncToLogistics, syncToQuality] = await Promise.all([
+        simulateSync(suggestion === 'reject' ? 0.05 : 0.2),
+        simulateSync(suggestion === 'reject' ? 0.05 : 0.25)
+      ])
+      
       const result: SignResult = {
         suggestion,
         suggestionLabel: getSignStatusLabel(suggestion),
         remark: remark || '',
-        operator: '收货员小王',
-        operateTime: new Date().toISOString()
+        operator: mockUserInfo.name,
+        operateTime,
+        syncToLogistics,
+        syncToQuality
       }
       
       setSignResult(result)
       
-      console.log('[Audit] 签收结果:', result)
-      console.log('[Audit] 同步通知：物流客服、品控人员')
+      const record: AuditRecord = {
+        id: `AUD${Date.now()}`,
+        waybillInfo,
+        tempSummary,
+        overTempDetails,
+        photos: [...photos],
+        abnormalItems: [...abnormalItems],
+        signResult: result,
+        status: suggestion,
+        createTime: operateTime,
+        storeName: mockUserInfo.storeName
+      }
+      addAuditRecord(record)
       
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return true
+      console.log('[Audit] 签收结果已保存:', suggestion, '同步状态-物流:', syncToLogistics, '品控:', syncToQuality)
+      
+      return {
+        success: true,
+        syncToLogistics,
+        syncToQuality
+      }
     } catch (error) {
       console.error('[Audit] 提交失败:', error)
-      return false
+      return defaultResult
     }
-  }, [tempSummary, abnormalItems])
+  }, [tempSummary, waybillInfo, abnormalItems, overTempDetails, photos])
 
   const resetAudit = useCallback(() => {
     console.log('[Audit] 重置稽核流程')

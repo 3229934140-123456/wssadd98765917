@@ -53,12 +53,16 @@ export interface AbnormalItem {
 
 export type SignSuggestion = 'normal' | 'remark' | 'reject'
 
+export type SyncStatus = 'pending' | 'success' | 'failed'
+
 export interface SignResult {
   suggestion: SignSuggestion
   suggestionLabel: string
   remark: string
   operator: string
   operateTime: string
+  syncToLogistics?: SyncStatus
+  syncToQuality?: SyncStatus
 }
 
 export interface AuditRecord {

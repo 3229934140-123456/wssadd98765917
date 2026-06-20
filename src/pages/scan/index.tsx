@@ -6,6 +6,7 @@ import styles from './index.module.scss'
 import StepIndicator from '@/components/StepIndicator'
 import TemperatureCard from '@/components/TemperatureCard'
 import { useAudit } from '@/store/AuditContext'
+import { getKnownWaybillCodes } from '@/data/mockData'
 
 const ScanPage: React.FC = () => {
   const {
@@ -27,10 +28,16 @@ const ScanPage: React.FC = () => {
       })
       console.log('[Scan] 扫码结果:', res.result)
       setLoading(true)
-      const success = await scanWaybill(res.result)
+      const code = res.result?.trim()
+      if (!code) {
+        setLoading(false)
+        Taro.showToast({ title: '扫码内容为空', icon: 'none' })
+        return
+      }
+      const success = await scanWaybill(code)
       setLoading(false)
       if (!success) {
-        Taro.showToast({ title: '未找到运单信息', icon: 'none' })
+        Taro.showToast({ title: `运单「${code}」未找到`, icon: 'none', duration: 2500 })
       }
     } catch (error) {
       console.error('[Scan] 扫码失败:', error)
@@ -40,9 +47,31 @@ const ScanPage: React.FC = () => {
 
   const handleManualInput = useCallback(async () => {
     console.log('[Scan] 手动输入运单')
-    const success = await scanWaybill('MANUAL-YL202406210001')
+    const knownCodes = getKnownWaybillCodes()
+    const hintText = `可测试运单：\n${knownCodes.join('\n')}`
+    
+    const res = await Taro.showModal({
+      title: '手动输入运单码',
+      content: hintText,
+      editable: true,
+      placeholderText: '请输入运单编号',
+      confirmText: '查询',
+      cancelText: '取消'
+    })
+    
+    if (!res.confirm) return
+    
+    const code = (res.content || '').trim()
+    if (!code) {
+      Taro.showToast({ title: '运单码不能为空', icon: 'none' })
+      return
+    }
+    
+    setLoading(true)
+    const success = await scanWaybill(code)
+    setLoading(false)
     if (!success) {
-      Taro.showToast({ title: '未找到运单信息', icon: 'none' })
+      Taro.showToast({ title: `运单「${code}」未找到`, icon: 'none', duration: 2500 })
     }
   }, [scanWaybill])
 

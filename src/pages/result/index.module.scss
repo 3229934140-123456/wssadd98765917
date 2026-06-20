@@ -314,7 +314,7 @@
   }
 
   &.reject {
-    background: linear-gradient(135deg, $color-error 0%, lighten($color-error, 10%) 100%);
+    background: linear-gradient(135deg, $color-error 0%, #ff7875 100%);
   }
 }
 
@@ -330,5 +330,74 @@
 
   &:active {
     opacity: 0.8;
+  }
+}
+
+.syncStatus {
+  margin-left: auto;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.syncPending {
+  background: $color-text-tertiary !important;
+  color: $color-text-tertiary;
+}
+
+.syncSuccess {
+  background: $color-success !important;
+  color: $color-success;
+}
+
+.syncFailed {
+  background: $color-error !important;
+  color: $color-error;
+}
+
+.syncWarning {
+  display: flex;
+  align-items: flex-start;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-warning, 0.1);
+  border-radius: $radius-sm;
+  border: 1rpx solid rgba($color-warning, 0.2);
+}
+
+.syncWarningIcon {
+  margin-right: $spacing-xs;
+  font-size: $font-size-sm;
+}
+
+.syncWarningText {
+  flex: 1;
+  font-size: $font-size-xs;
+  color: $color-warning;
+  line-height: 1.5;
+}
+
+.successIconWarning {
+  background: $color-warning !important;
+}
+
+.successBtnRow {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.successBtnSecondary {
+  background: $color-bg-hover !important;
+  color: $color-text-primary !important;
+}
+
+.noticeItem {
+  .syncPending {
+    color: $color-text-tertiary;
+  }
+  .syncSuccess {
+    color: $color-success;
+  }
+  .syncFailed {
+    color: $color-error;
   }
 }

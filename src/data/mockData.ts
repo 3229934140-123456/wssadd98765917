@@ -1,23 +1,26 @@
-import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem } from '@/types/audit'
+import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord } from '@/types/audit'
 
-const generateTempRecords = (baseTemp: number, hasOver: boolean, hasWarning: boolean) => {
+const generateTempRecords = (baseTemp: number, tempMin: number, tempMax: number, hasOver: boolean, hasWarning: boolean): TempRecord[] => {
   const records = []
   const now = new Date()
+  const range = tempMax - tempMin
   for (let i = 119; i >= 0; i--) {
     const time = new Date(now.getTime() - i * 60 * 1000)
-    let temp = baseTemp + (Math.random() - 0.5) * 2
+    let temp = baseTemp + (Math.random() - 0.5) * range * 0.5
     let status: 'normal' | 'warning' | 'over' = 'normal'
+    const warningThreshold = tempMax + 2
+    const overThreshold = tempMax + 5
     
     if (hasOver && i >= 40 && i <= 55) {
-      temp = 8 + Math.random() * 3
+      temp = overThreshold + 1 + Math.random() * 3
       status = 'over'
     } else if (hasWarning && i >= 80 && i <= 90) {
-      temp = 5 + Math.random() * 1.5
+      temp = warningThreshold + Math.random() * 2
       status = 'warning'
-    } else if (temp > 6) {
+    } else if (temp > overThreshold) {
+      status = 'over'
+    } else if (temp > warningThreshold) {
       status = 'warning'
-    } else if (temp > 4) {
-      status = 'normal'
     }
     
     records.push({
@@ -29,7 +32,7 @@ const generateTempRecords = (baseTemp: number, hasOver: boolean, hasWarning: boo
   return records
 }
 
-const generateSummary = (records: ReturnType<typeof generateTempRecords>) => {
+const generateSummary = (records: TempRecord[]): TempSummary => {
   const temps = records.map(r => r.temperature)
   const overRecords = records.filter(r => r.status === 'over')
   const warningRecords = records.filter(r => r.status === 'warning')
@@ -38,8 +41,8 @@ const generateSummary = (records: ReturnType<typeof generateTempRecords>) => {
     hasOverTemp: overRecords.length > 0,
     hasWarningTemp: warningRecords.length > 0,
     avgTemp: Math.round(temps.reduce((a, b) => a + b, 0) / temps.length * 10) / 10,
-    maxTemp: Math.max(...temps),
-    minTemp: Math.min(...temps),
+    maxTemp: Math.round(Math.max(...temps) * 10) / 10,
+    minTemp: Math.round(Math.min(...temps) * 10) / 10,
     latestTemp: temps[temps.length - 1],
     overTempCount: overRecords.length,
     warningTempCount: warningRecords.length,
@@ -47,40 +50,20 @@ const generateSummary = (records: ReturnType<typeof generateTempRecords>) => {
   }
 }
 
-const generateOverTempDetails = (hasOver: boolean): OverTempDetail[] => {
+const generateOverTempDetails = (hasOver: boolean, tempMax: number): OverTempDetail[] => {
   if (!hasOver) return []
   const now = new Date()
   const startTime = new Date(now.getTime() - 80 * 60 * 1000)
   const endTime = new Date(now.getTime() - 65 * 60 * 1000)
+  const overMax = tempMax + 7
   return [{
     startTime: startTime.toISOString(),
     endTime: endTime.toISOString(),
     durationMinutes: 15,
-    maxTemperature: 10.2,
-    avgTemperature: 8.8
+    maxTemperature: Math.round(overMax * 10) / 10,
+    avgTemperature: Math.round((tempMax + 5) * 10) / 10
   }]
 }
-
-export const mockWaybillInfo: WaybillInfo = {
-  waybillCode: 'YL202406210001',
-  productName: '冷鲜猪后腿肉',
-  productType: '冷鲜肉',
-  requiredTempZone: '0-4℃冷藏区',
-  tempMin: 0,
-  tempMax: 4,
-  warehouse: '上海青浦冷链中心',
-  estimatedArrivalTime: '2024-06-21 09:30:00',
-  actualArrivalTime: '2024-06-21 09:25:00',
-  vehicleNo: '沪A·D85263',
-  driverName: '张师傅',
-  driverPhone: '138****5678'
-}
-
-export const mockTempSummary: TempSummary = generateSummary(
-  generateTempRecords(2.5, true, true)
-)
-
-export const mockOverTempDetails: OverTempDetail[] = generateOverTempDetails(true)
 
 export const mockAbnormalItems: AbnormalItem[] = [
   { key: 'soft', label: '外箱软化', value: false },
@@ -89,18 +72,152 @@ export const mockAbnormalItems: AbnormalItem[] = [
   { key: 'normal', label: '无异常', value: false }
 ]
 
+interface WaybillData {
+  waybillInfo: WaybillInfo
+  tempSummary: TempSummary
+  overTempDetails: OverTempDetail[]
+}
+
+const waybillList: Array<Omit<WaybillInfo, 'estimatedArrivalTime' | 'actualArrivalTime'> & {
+  baseTemp: number
+  hasOver: boolean
+  hasWarning: boolean
+}> = [
+  {
+    waybillCode: 'YL202406210001',
+    productName: '冷鲜猪后腿肉',
+    productType: '冷鲜肉',
+    requiredTempZone: '0-4℃冷藏区',
+    tempMin: 0,
+    tempMax: 4,
+    warehouse: '上海青浦冷链中心',
+    vehicleNo: '沪A·D85263',
+    driverName: '张师傅',
+    driverPhone: '138****5678',
+    baseTemp: 2.5,
+    hasOver: true,
+    hasWarning: true
+  },
+  {
+    waybillCode: 'YL202406210002',
+    productName: '进口肥牛卷',
+    productType: '冻品',
+    requiredTempZone: '-18℃冷冻区',
+    tempMin: -20,
+    tempMax: -15,
+    warehouse: '广州白云冷链仓',
+    vehicleNo: '粤B·K72891',
+    driverName: '李师傅',
+    driverPhone: '139****1234',
+    baseTemp: -17,
+    hasOver: false,
+    hasWarning: false
+  },
+  {
+    waybillCode: 'YL202406210003',
+    productName: '冷鲜鸡胸肉',
+    productType: '冷鲜肉',
+    requiredTempZone: '0-4℃冷藏区',
+    tempMin: 0,
+    tempMax: 4,
+    warehouse: '北京通州冷链基地',
+    vehicleNo: '京A·M35628',
+    driverName: '王师傅',
+    driverPhone: '136****8899',
+    baseTemp: 2,
+    hasOver: false,
+    hasWarning: true
+  },
+  {
+    waybillCode: 'YL202406210004',
+    productName: '冻品虾仁',
+    productType: '冻品',
+    requiredTempZone: '-18℃冷冻区',
+    tempMin: -20,
+    tempMax: -15,
+    warehouse: '深圳龙岗冷链中心',
+    vehicleNo: '浙A·L90234',
+    driverName: '刘师傅',
+    driverPhone: '137****4567',
+    baseTemp: -18,
+    hasOver: true,
+    hasWarning: true
+  },
+  {
+    waybillCode: 'YL202406210005',
+    productName: '冷鲜羊排',
+    productType: '冷鲜肉',
+    requiredTempZone: '0-4℃冷藏区',
+    tempMin: 0,
+    tempMax: 4,
+    warehouse: '杭州余杭冷链仓',
+    vehicleNo: '沪B·F18725',
+    driverName: '陈师傅',
+    driverPhone: '135****7788',
+    baseTemp: 3,
+    hasOver: false,
+    hasWarning: false
+  }
+]
+
+export const getWaybillByCode = (code: string): WaybillData | null => {
+  const trimmed = code.trim()
+  if (!trimmed) return null
+  
+  const found = waybillList.find(w => w.waybillCode === trimmed)
+  if (!found) return null
+  
+  const now = new Date()
+  const actualTime = new Date(now.getTime() - 10 * 60000)
+  const estimatedTime = new Date(now.getTime() + 20 * 60000)
+  const formatTime = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+  }
+  
+  const records = generateTempRecords(found.baseTemp, found.tempMin, found.tempMax, found.hasOver, found.hasWarning)
+  const summary = generateSummary(records)
+  const overDetails = generateOverTempDetails(found.hasOver, found.tempMax)
+  
+  return {
+    waybillInfo: {
+      waybillCode: found.waybillCode,
+      productName: found.productName,
+      productType: found.productType,
+      requiredTempZone: found.requiredTempZone,
+      tempMin: found.tempMin,
+      tempMax: found.tempMax,
+      warehouse: found.warehouse,
+      estimatedArrivalTime: formatTime(estimatedTime),
+      actualArrivalTime: formatTime(actualTime),
+      vehicleNo: found.vehicleNo,
+      driverName: found.driverName,
+      driverPhone: found.driverPhone
+    },
+    tempSummary: summary,
+    overTempDetails: overDetails
+  }
+}
+
+export const getKnownWaybillCodes = (): string[] => {
+  return waybillList.map(w => w.waybillCode)
+}
+
 const productNames = ['冷鲜猪后腿肉', '进口肥牛卷', '冷鲜鸡胸肉', '冻品虾仁', '冷鲜羊排', '冻品牛肉丸', '冷鲜猪里脊', '进口牛仔骨', '冷鲜鸭胸肉', '冻品鱼丸']
 const warehouses = ['上海青浦冷链中心', '广州白云冷链仓', '北京通州冷链基地', '深圳龙岗冷链中心', '杭州余杭冷链仓']
 const vehicles = ['沪A·D85263', '粤B·K72891', '京A·M35628', '浙A·L90234', '沪B·F18725']
 const statuses: Array<'normal' | 'remark' | 'reject'> = ['normal', 'normal', 'remark', 'normal', 'reject', 'normal', 'normal', 'remark', 'normal', 'normal']
 const stores = ['上海五角场店', '上海陆家嘴店', '上海徐家汇店', '上海静安寺店', '上海虹桥店']
 
-export const mockAuditRecords: AuditRecord[] = productNames.map((name, index) => {
+let auditRecords: AuditRecord[] = productNames.map((name, index) => {
   const hasOver = statuses[index] !== 'normal'
-  const records = generateTempRecords(2.5, hasOver, hasOver)
+  const tempMin = index % 2 === 0 ? 0 : -20
+  const tempMax = index % 2 === 0 ? 4 : -15
+  const baseTemp = index % 2 === 0 ? 2.5 : -17
+  const records = generateTempRecords(baseTemp, tempMin, tempMax, hasOver, hasOver)
   const summary = generateSummary(records)
   const now = new Date()
-  const createTime = new Date(now.getTime() - index * 3600 * 1000)
+  const createTime = new Date(now.getTime() - (index + 1) * 3600 * 1000)
   
   return {
     id: `AUD${20240621}${String(index + 1).padStart(4, '0')}`,
@@ -109,8 +226,8 @@ export const mockAuditRecords: AuditRecord[] = productNames.map((name, index) =>
       productName: name,
       productType: index % 2 === 0 ? '冷鲜肉' : '冻品',
       requiredTempZone: index % 2 === 0 ? '0-4℃冷藏区' : '-18℃冷冻区',
-      tempMin: index % 2 === 0 ? 0 : -20,
-      tempMax: index % 2 === 0 ? 4 : -15,
+      tempMin,
+      tempMax,
       warehouse: warehouses[index % warehouses.length],
       estimatedArrivalTime: new Date(createTime.getTime() - 30 * 60000).toISOString(),
       actualArrivalTime: createTime.toISOString(),
@@ -119,7 +236,7 @@ export const mockAuditRecords: AuditRecord[] = productNames.map((name, index) =>
       driverPhone: '138****5678'
     },
     tempSummary: summary,
-    overTempDetails: generateOverTempDetails(hasOver),
+    overTempDetails: generateOverTempDetails(hasOver, tempMax),
     photos: [
       { type: 'doorSeal', url: '', uploadTime: createTime.toISOString() },
       { type: 'outerPackage', url: '', uploadTime: createTime.toISOString() },
@@ -141,6 +258,16 @@ export const mockAuditRecords: AuditRecord[] = productNames.map((name, index) =>
     storeName: stores[index % stores.length]
   }
 })
+
+export const getAuditRecords = (): AuditRecord[] => {
+  return [...auditRecords].sort((a, b) => 
+    new Date(b.createTime).getTime() - new Date(a.createTime).getTime()
+  )
+}
+
+export const addAuditRecord = (record: AuditRecord): void => {
+  auditRecords.unshift(record)
+}
 
 export const mockUserInfo = {
   name: '王建国',

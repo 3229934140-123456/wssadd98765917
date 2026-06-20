@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, Text, Button, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import StatusBadge from '@/components/StatusBadge'
-import { mockAuditRecords, mockUserInfo } from '@/data/mockData'
+import { getAuditRecords, mockUserInfo } from '@/data/mockData'
 import { formatDateTime } from '@/utils/temperature'
 import type { AuditRecord } from '@/types/audit'
 
@@ -16,8 +16,10 @@ const HomePage: React.FC = () => {
     console.log('[Home] 加载最近记录')
     setLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setRecords(mockAuditRecords.slice(0, 5))
+      await new Promise(resolve => setTimeout(resolve, 300))
+      const all = getAuditRecords()
+      setRecords(all.slice(0, 5))
+      console.log('[Home] 最近记录数量:', all.length)
     } catch (error) {
       console.error('[Home] 加载记录失败:', error)
       Taro.showToast({ title: '加载失败', icon: 'none' })
@@ -30,6 +32,11 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     loadRecentRecords()
   }, [loadRecentRecords])
+
+  useDidShow(() => {
+    console.log('[Home] 页面显示，刷新记录')
+    loadRecentRecords()
+  })
 
   const handlePullDownRefresh = useCallback(() => {
     loadRecentRecords()

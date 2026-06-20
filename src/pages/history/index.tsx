@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import StatusBadge from '@/components/StatusBadge'
-import { mockAuditRecords } from '@/data/mockData'
+import { getAuditRecords } from '@/data/mockData'
 import { formatDateTime } from '@/utils/temperature'
 import type { AuditRecord, SignSuggestion } from '@/types/audit'
 
@@ -30,8 +30,10 @@ const HistoryPage: React.FC = () => {
     console.log('[History] 加载记录列表')
     setLoading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setRecords(mockAuditRecords)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      const list = getAuditRecords()
+      setRecords(list)
+      console.log('[History] 记录数量:', list.length)
     } catch (error) {
       console.error('[History] 加载记录失败:', error)
       Taro.showToast({ title: '加载失败', icon: 'none' })
@@ -44,6 +46,11 @@ const HistoryPage: React.FC = () => {
   useEffect(() => {
     loadRecords()
   }, [loadRecords])
+
+  useDidShow(() => {
+    console.log('[History] 页面显示，刷新记录')
+    loadRecords()
+  })
 
   useEffect(() => {
     if (activeFilter === 'all') {

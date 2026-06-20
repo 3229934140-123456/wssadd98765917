@@ -6,7 +6,25 @@ import styles from './index.module.scss'
 import StepIndicator from '@/components/StepIndicator'
 import { useAudit } from '@/store/AuditContext'
 import { calculateSuggestion, getSignStatusLabel } from '@/utils/temperature'
-import type { SignSuggestion } from '@/types/audit'
+import type { SignSuggestion, SyncStatus } from '@/types/audit'
+
+const syncStatusLabel = (status: SyncStatus | undefined) => {
+  const map: Record<SyncStatus, string> = {
+    pending: '同步中',
+    success: '已同步',
+    failed: '同步失败'
+  }
+  return status ? map[status] : '等待中'
+}
+
+const syncStatusClass = (status: SyncStatus | undefined) => {
+  const map: Record<SyncStatus, string> = {
+    pending: styles.syncPending,
+    success: styles.syncSuccess,
+    failed: styles.syncFailed
+  }
+  return status ? map[status] : styles.syncPending
+}
 
 const ResultPage: React.FC = () => {
   const {
@@ -21,6 +39,10 @@ const ResultPage: React.FC = () => {
   const [remark, setRemark] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [syncResult, setSyncResult] = useState<{
+    syncToLogistics: SyncStatus
+    syncToQuality: SyncStatus
+  } | null>(null)
 
   const suggestion = useMemo<SignSuggestion | null>(() => {
     if (!tempSummary) return null
@@ -79,6 +101,11 @@ const ResultPage: React.FC = () => {
     return icons[suggestion]
   }, [suggestion])
 
+  const hasAnySyncFailed = useMemo(() => {
+    if (!syncResult) return false
+    return syncResult.syncToLogistics === 'failed' || syncResult.syncToQuality === 'failed'
+  }, [syncResult])
+
   const handleBack = useCallback(() => {
     console.log('[Result] 返回现场核对')
     setCurrentStep('check')
@@ -89,11 +116,16 @@ const ResultPage: React.FC = () => {
     if (!suggestion) return
     console.log('[Result] 提交签收意见:', suggestion)
     setSubmitting(true)
+    setSyncResult({ syncToLogistics: 'pending', syncToQuality: 'pending' })
     try {
-      const success = await submitSignResult(remark)
+      const result = await submitSignResult(remark)
       setSubmitting(false)
-      if (success) {
-        setShowSuccess(true)
+      setSyncResult({
+        syncToLogistics: result.syncToLogistics,
+        syncToQuality: result.syncToQuality
+      })
+      if (result.success) {
+        setTimeout(() => setShowSuccess(true), 500)
       } else {
         Taro.showToast({ title: '提交失败，请重试', icon: 'none' })
       }
@@ -108,6 +140,12 @@ const ResultPage: React.FC = () => {
     console.log('[Result] 完成，返回首页')
     resetAudit()
     Taro.switchTab({ url: '/pages/home/index' })
+  }, [resetAudit])
+
+  const handleGoHistory = useCallback(() => {
+    console.log('[Result] 查看历史记录')
+    resetAudit()
+    Taro.switchTab({ url: '/pages/history/index' })
   }, [resetAudit])
 
   if (!waybillInfo || !tempSummary || !suggestion) {
@@ -157,6 +195,7 @@ const ResultPage: React.FC = () => {
             value={remark}
             onInput={(e) => setRemark(e.detail.value)}
             maxlength={200}
+            disabled={submitting || showSuccess}
           />
           <Text className={styles.remarkHint}>{remark.length}/200</Text>
         </View>
@@ -168,47 +207,78 @@ const ResultPage: React.FC = () => {
           </Text>
           <View className={styles.noticeList}>
             <View className={styles.noticeItem}>
-              <View className={styles.noticeDot} />
-              <Text>物流客服：将收到温度异常和拒收通知</Text>
+              <View className={classnames(styles.noticeDot, syncResult && syncStatusClass(syncResult.syncToLogistics))} />
+              <Text>物流客服</Text>
+              <Text className={classnames(styles.syncStatus, syncResult && syncStatusClass(syncResult.syncToLogistics))}>
+                {submitting ? '同步中...' : syncStatusLabel(syncResult?.syncToLogistics)}
+              </Text>
             </View>
             <View className={styles.noticeItem}>
-              <View className={styles.noticeDot} />
-              <Text>品控人员：将对拒收货品进行复核确认</Text>
+              <View className={classnames(styles.noticeDot, syncResult && syncStatusClass(syncResult.syncToQuality))} />
+              <Text>品控人员</Text>
+              <Text className={classnames(styles.syncStatus, syncResult && syncStatusClass(syncResult.syncToQuality))}>
+                {submitting ? '同步中...' : syncStatusLabel(syncResult?.syncToQuality)}
+              </Text>
             </View>
             <View className={styles.noticeItem}>
               <View className={styles.noticeDot} />
               <Text>相关记录将永久保存在系统中可追溯</Text>
+              <Text className={styles.syncStatus}>
+                {showSuccess ? '已保存' : '待保存'}
+              </Text>
             </View>
           </View>
+          {syncResult && hasAnySyncFailed && (
+            <View className={styles.syncWarning}>
+              <Text className={styles.syncWarningIcon}>⚠️</Text>
+              <Text className={styles.syncWarningText}>
+                部分同步失败，请稍后在历史记录中重试或联系系统管理员
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
-      <View className={styles.footer}>
-        <Button className={styles.backBtn} onClick={handleBack}>
-          上一步
-        </Button>
-        <Button
-          className={classnames(styles.submitBtn, suggestion === 'reject' && styles.reject)}
-          onClick={handleSubmit}
-          loading={submitting}
-          disabled={submitting}
-        >
-          {submitting ? '提交中...' : '确认提交'}
-        </Button>
-      </View>
+      {!showSuccess && (
+        <View className={styles.footer}>
+          <Button className={styles.backBtn} onClick={handleBack} disabled={submitting}>
+            上一步
+          </Button>
+          <Button
+            className={classnames(styles.submitBtn, suggestion === 'reject' && styles.reject)}
+            onClick={handleSubmit}
+            loading={submitting}
+            disabled={submitting}
+          >
+            {submitting ? '提交中...' : '确认提交'}
+          </Button>
+        </View>
+      )}
 
       {showSuccess && (
         <View className={styles.successMask}>
           <View className={styles.successContent}>
-            <View className={styles.successIcon}>✓</View>
-            <Text className={styles.successTitle}>提交成功</Text>
-            <Text className={styles.successDesc}>
-              稽核记录已保存{'\n'}
-              相关意见已同步至物流客服和品控人员
+            <View className={classnames(styles.successIcon, hasAnySyncFailed && styles.successIconWarning)}>
+              {hasAnySyncFailed ? '!' : '✓'}
+            </View>
+            <Text className={styles.successTitle}>
+              {hasAnySyncFailed ? '记录已保存（部分同步失败）' : '提交成功'}
             </Text>
-            <Button className={styles.successBtn} onClick={handleComplete}>
-              返回首页
-            </Button>
+            <Text className={styles.successDesc}>
+              {waybillInfo.productName} · {suggestionLabel}{'\n'}
+              {remark ? `备注：${remark}\n` : ''}
+              {'\n'}
+              物流客服：{syncStatusLabel(syncResult?.syncToLogistics)}{'\n'}
+              品控人员：{syncStatusLabel(syncResult?.syncToQuality)}
+            </Text>
+            <View className={styles.successBtnRow}>
+              <Button className={classnames(styles.successBtn, styles.successBtnSecondary)} onClick={handleGoHistory}>
+                查看历史
+              </Button>
+              <Button className={styles.successBtn} onClick={handleComplete}>
+                返回首页
+              </Button>
+            </View>
           </View>
         </View>
       )}

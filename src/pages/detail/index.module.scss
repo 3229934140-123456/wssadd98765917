@@ -388,3 +388,27 @@
   color: $color-text-tertiary;
   font-size: $font-size-md;
 }
+
+.syncDivider {
+  height: 1rpx;
+  background: $color-divider;
+  margin: $spacing-md 0;
+}
+
+.syncSectionTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.syncSuccessText {
+  color: $color-success !important;
+  font-weight: $font-weight-medium;
+}
+
+.syncFailedText {
+  color: $color-error !important;
+  font-weight: $font-weight-medium;
+}
