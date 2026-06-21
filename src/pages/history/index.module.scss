@@ -45,6 +45,40 @@
   margin-left: $spacing-xs;
 }
 
+.timeRangeBar {
+  display: flex;
+  gap: 0;
+  background: $color-bg-card;
+  border-bottom: 1rpx solid $color-divider;
+  padding: 0 $page-padding;
+}
+
+.timeRangeItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm 0;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  position: relative;
+  transition: color $transition-base;
+
+  &.timeRangeActive {
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 30%;
+      right: 30%;
+      height: 4rpx;
+      background: $color-primary;
+      border-radius: 2rpx;
+    }
+  }
+}
+
 .filterBar {
   display: flex;
   gap: $spacing-sm;
@@ -95,7 +129,154 @@
 }
 
 .listContainer {
-  padding: $spacing-md $page-padding;
+  padding: 0 $page-padding $spacing-md;
+}
+
+.dashboard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-md 0;
+  box-shadow: $shadow-card;
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.dashboardTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.dashboardToggle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs $spacing-sm;
+}
+
+.dashboardSummary {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+}
+
+.summaryItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md $spacing-sm;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.summaryWarning {
+  background: rgba($color-warning, 0.08);
+}
+
+.summaryError {
+  background: rgba($color-error, 0.06);
+}
+
+.summaryValue {
+  font-size: 48rpx;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.summaryLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+  display: block;
+}
+
+.dashboardSection {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.dashboardSectionTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-md;
+  display: block;
+}
+
+.dashboardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.dashboardGridItem {
+  padding: $spacing-sm $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  min-width: 140rpx;
+  text-align: center;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.gridItemCount {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+}
+
+.gridItemLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-top: 4rpx;
+  display: block;
+  @include text-ellipsis;
+  max-width: 160rpx;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gridItemWarn {
+  font-size: 20rpx;
+  color: $color-error;
+  margin-top: 2rpx;
+  display: block;
+}
+
+.dashboardShowBar {
+  text-align: center;
+  padding: $spacing-sm;
+  margin: $spacing-md 0 0;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.dashboardShowText {
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.resultCount {
+  padding: $spacing-sm $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
 }
 
 .recordList {
@@ -114,6 +295,10 @@
 
   &.recordCardWarning {
     border-left: 6rpx solid $color-warning;
+  }
+
+  &.recordCardReviewed {
+    border-left: 6rpx solid $color-success;
   }
 
   &:active {
@@ -135,6 +320,13 @@
   min-width: 0;
 }
 
+.recordHeaderRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $spacing-xs;
+}
+
 .recordTitle {
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
@@ -149,6 +341,15 @@
   margin-top: $spacing-xs;
   @include text-ellipsis;
   display: block;
+}
+
+.reviewedTag {
+  font-size: $font-size-xs;
+  color: $color-success;
+  background: rgba($color-success, 0.1);
+  padding: 2rpx $spacing-sm;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
 }
 
 .recordBody {

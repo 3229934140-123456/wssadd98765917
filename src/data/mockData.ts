@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord, SyncStatus } from '@/types/audit'
+import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord, SyncStatus, SearchQuery, DashboardStats, TimeRange, ReviewInfo, ReviewConclusion } from '@/types/audit'
 
 const STORAGE_KEY = 'cold_chain_audit_records_v1'
 
@@ -320,22 +320,58 @@ const scheduleSave = (): void => {
 
 void initFromStorage()
 
-export const getAuditRecords = (): AuditRecord[] => {
-  return [...auditRecords].sort((a, b) => 
-    new Date(b.createTime).getTime() - new Date(a.createTime).getTime()
-  )
+const ensureSyncFields = (record: AuditRecord): AuditRecord => {
+  if (record.signResult.syncToLogistics && record.signResult.syncToQuality) {
+    return record
+  }
+  return {
+    ...record,
+    signResult: {
+      ...record.signResult,
+      syncToLogistics: record.signResult.syncToLogistics || 'success',
+      syncToQuality: record.signResult.syncToQuality || 'success'
+    }
+  }
 }
 
-export interface SearchQuery {
-  keyword?: string
-  status?: 'normal' | 'remark' | 'reject' | 'syncFailed' | 'all'
+export const getAuditRecords = (): AuditRecord[] => {
+  return [...auditRecords]
+    .map(ensureSyncFields)
+    .sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime())
+}
+
+const getTimeRangeStart = (timeRange: TimeRange): Date | null => {
+  const now = new Date()
+  switch (timeRange) {
+    case 'today': {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      return start
+    }
+    case 'week': {
+      const start = new Date(now.getTime() - 7 * 24 * 3600 * 1000)
+      return start
+    }
+    case 'month': {
+      const start = new Date(now.getTime() - 30 * 24 * 3600 * 1000)
+      return start
+    }
+    default:
+      return null
+  }
 }
 
 export const searchAuditRecords = (query: SearchQuery): AuditRecord[] => {
-  const { keyword = '', status = 'all' } = query
+  const { keyword = '', status = 'all', timeRange = 'all' } = query
   const kw = keyword.trim().toLowerCase()
   
   let list = getAuditRecords()
+  
+  if (timeRange !== 'all') {
+    const start = getTimeRangeStart(timeRange)
+    if (start) {
+      list = list.filter(r => new Date(r.createTime).getTime() >= start.getTime())
+    }
+  }
   
   if (status !== 'all') {
     if (status === 'syncFailed') {
@@ -356,6 +392,59 @@ export const searchAuditRecords = (query: SearchQuery): AuditRecord[] => {
   }
   
   return list
+}
+
+export const getDashboardStats = (timeRange: TimeRange = 'all'): DashboardStats => {
+  const records = timeRange === 'all' 
+    ? getAuditRecords() 
+    : searchAuditRecords({ timeRange })
+  
+  const totalCount = records.length
+  const overTempCount = records.filter(r => r.tempSummary.hasOverTemp).length
+  const syncFailedCount = records.filter(r => 
+    r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed'
+  ).length
+  
+  const storeMap = new Map<string, { count: number; overTemp: number; syncFailed: number }>()
+  const productMap = new Map<string, { count: number; overTemp: number; syncFailed: number }>()
+  const statusMap = new Map<string, { name: string; key: AuditRecord['status']; count: number }>()
+  
+  for (const r of records) {
+    const store = storeMap.get(r.storeName) || { count: 0, overTemp: 0, syncFailed: 0 }
+    store.count++
+    if (r.tempSummary.hasOverTemp) store.overTemp++
+    if (r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed') store.syncFailed++
+    storeMap.set(r.storeName, store)
+    
+    const product = productMap.get(r.waybillInfo.productName) || { count: 0, overTemp: 0, syncFailed: 0 }
+    product.count++
+    if (r.tempSummary.hasOverTemp) product.overTemp++
+    if (r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed') product.syncFailed++
+    productMap.set(r.waybillInfo.productName, product)
+    
+    const statusKey = r.status
+    const s = statusMap.get(statusKey) || { 
+      name: statusKey === 'normal' ? '正常签收' : statusKey === 'remark' ? '备注签收' : '拒收待复核', 
+      key: statusKey, 
+      count: 0 
+    }
+    s.count++
+    statusMap.set(statusKey, s)
+  }
+  
+  return {
+    totalCount,
+    overTempCount,
+    syncFailedCount,
+    byStore: Array.from(storeMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.count - a.count),
+    byProduct: Array.from(productMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.count - a.count),
+    byStatus: Array.from(statusMap.values())
+      .sort((a, b) => b.count - a.count)
+  }
 }
 
 export const addAuditRecord = (record: AuditRecord): void => {
@@ -384,6 +473,39 @@ export const updateRecordSyncStatus = (
   }
   scheduleSave()
   console.log('[MockData] 更新同步状态:', id, field, status)
+  return auditRecords[idx]
+}
+
+export const submitReview = (
+  id: string,
+  conclusion: ReviewConclusion,
+  reviewer: string,
+  comment: string
+): AuditRecord | null => {
+  const idx = auditRecords.findIndex(r => r.id === id)
+  if (idx === -1) return null
+  
+  const conclusionLabel = conclusion === 'approved' ? '复核通过' 
+    : conclusion === 'conditional' ? '有条件通过' 
+    : '复核驳回'
+  
+  const reviewInfo: ReviewInfo = {
+    conclusion,
+    conclusionLabel,
+    reviewer,
+    reviewTime: new Date().toISOString(),
+    comment
+  }
+  
+  auditRecords[idx] = {
+    ...auditRecords[idx],
+    signResult: {
+      ...auditRecords[idx].signResult,
+      reviewInfo
+    }
+  }
+  scheduleSave()
+  console.log('[MockData] 提交复核:', id, conclusionLabel)
   return auditRecords[idx]
 }
 

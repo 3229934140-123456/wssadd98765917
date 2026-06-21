@@ -55,6 +55,16 @@ export type SignSuggestion = 'normal' | 'remark' | 'reject'
 
 export type SyncStatus = 'pending' | 'success' | 'failed'
 
+export type ReviewConclusion = 'approved' | 'conditional' | 'rejected'
+
+export interface ReviewInfo {
+  conclusion: ReviewConclusion
+  conclusionLabel: string
+  reviewer: string
+  reviewTime: string
+  comment: string
+}
+
 export interface SignResult {
   suggestion: SignSuggestion
   suggestionLabel: string
@@ -63,7 +73,10 @@ export interface SignResult {
   operateTime: string
   syncToLogistics?: SyncStatus
   syncToQuality?: SyncStatus
+  reviewInfo?: ReviewInfo
 }
+
+export type TimeRange = 'today' | 'week' | 'month' | 'all'
 
 export interface AuditRecord {
   id: string
@@ -79,3 +92,18 @@ export interface AuditRecord {
 }
 
 export type AuditStep = 'scan' | 'check' | 'result'
+
+export interface DashboardStats {
+  totalCount: number
+  overTempCount: number
+  syncFailedCount: number
+  byStore: Array<{ name: string; count: number; overTemp: number; syncFailed: number }>
+  byProduct: Array<{ name: string; count: number; overTemp: number; syncFailed: number }>
+  byStatus: Array<{ name: string; key: SignSuggestion; count: number }>
+}
+
+export interface SearchQuery {
+  keyword?: string
+  status?: SignSuggestion | 'syncFailed' | 'all'
+  timeRange?: TimeRange
+}
