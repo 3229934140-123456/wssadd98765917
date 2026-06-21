@@ -9,15 +9,37 @@
   padding: $spacing-md $page-padding;
   background: $color-bg-card;
   border-bottom: 1rpx solid $color-divider;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 }
 
 .searchInputWrap {
+  flex: 1;
   display: flex;
   align-items: center;
   background: $color-bg-page;
   border-radius: $radius-button;
   padding: 0 $spacing-md;
   height: $button-height-lg;
+}
+
+.exportBtn {
+  flex-shrink: 0;
+  padding: 0 $spacing-md;
+  height: $button-height-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-button;
+
+  &:active {
+    opacity: 0.85;
+  }
 }
 
 .searchIcon {
@@ -510,4 +532,269 @@
   padding: $spacing-xl;
   color: $color-text-tertiary;
   font-size: $font-size-sm;
+}
+
+.disposalTag {
+  font-size: $font-size-xs;
+  padding: 2rpx $spacing-sm;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
+}
+
+.disposalTagStored {
+  color: $color-success;
+  background: rgba($color-success, 0.1);
+}
+
+.disposalTagReturned {
+  color: $color-error;
+  background: rgba($color-error, 0.1);
+}
+
+.disposalTagNegotiating {
+  color: $color-warning;
+  background: rgba($color-warning, 0.12);
+}
+
+.gridItemStats {
+  display: flex;
+  gap: $spacing-xs;
+  margin-top: 4rpx;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gridItemStatOver {
+  font-size: 20rpx;
+  color: $color-warning;
+  background: rgba($color-warning, 0.1);
+  padding: 0 $spacing-xs;
+  border-radius: 8rpx;
+}
+
+.gridItemStatFail {
+  font-size: 20rpx;
+  color: $color-error;
+  background: rgba($color-error, 0.08);
+  padding: 0 $spacing-xs;
+  border-radius: 8rpx;
+}
+
+.modalMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: $spacing-lg;
+}
+
+.modalContent {
+  width: 100%;
+  max-width: 640rpx;
+  max-height: 80vh;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  padding: $spacing-xs;
+}
+
+.exportScroll {
+  flex: 1;
+  padding: 0 $spacing-lg;
+  min-height: 200rpx;
+}
+
+.exportSection {
+  padding: $spacing-md 0;
+  border-bottom: 1rpx dashed $color-divider;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.exportSectionTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.exportRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-xs 0;
+}
+
+.exportKey {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.exportValue {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.exportGrid {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.exportGridItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+}
+
+.exportGridValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  display: block;
+}
+
+.exportGridLabel {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  margin-top: 2rpx;
+  display: block;
+}
+
+.exportSummarySub {
+  display: flex;
+  gap: $spacing-md;
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.exportRecordCard {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+}
+
+.exportRecordHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.exportWaybill {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.exportSuggestion {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.exportMeta {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  display: block;
+}
+
+.exportMetaRow {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.exportRemark {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  padding-top: $spacing-xs;
+  border-top: 1rpx dashed $color-divider;
+  display: block;
+  line-height: 1.6;
+}
+
+.modalActions {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1rpx solid $color-divider;
+  flex-shrink: 0;
+}
+
+.modalBtnCancel {
+  flex: 1;
+  height: $button-height-lg;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  border: none;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.modalBtnPrimary {
+  flex: 1;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border: none;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
 }

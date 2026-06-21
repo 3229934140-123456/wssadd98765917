@@ -681,3 +681,218 @@
 .modalConfirmDisabled {
   opacity: 0.6;
 }
+
+.disposalSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  border-left: 6rpx solid $color-primary;
+}
+
+.disposalBtn {
+  @include button-reset;
+  width: 100%;
+  height: $button-height-lg;
+  background: linear-gradient(135deg, $color-primary-light 0%, $color-primary 100%);
+  color: $color-text-white;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  box-shadow: $shadow-card;
+
+  &::after {
+    border: none !important;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.disposalBtnSmall {
+  @include button-reset;
+  padding: 0 $spacing-lg;
+  height: $button-height-md;
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &::after {
+    border: none !important;
+  }
+
+  &:active {
+    background: rgba($color-primary, 0.18);
+  }
+}
+
+.timelineSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.timelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+}
+
+.timelineToggle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: $spacing-xs $spacing-sm;
+}
+
+.timelineList {
+  padding-top: $spacing-xs;
+}
+
+.timelineItem {
+  display: flex;
+  gap: $spacing-md;
+  padding-bottom: $spacing-lg;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+.timelineLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 56rpx;
+  flex-shrink: 0;
+}
+
+.timelineDot {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-hover;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.timelineDotText {
+  font-size: 28rpx;
+  line-height: 1;
+}
+
+.timelineDotSuccess {
+  background: rgba($color-success, 0.12);
+}
+
+.timelineDotWarning {
+  background: rgba($color-warning, 0.14);
+}
+
+.timelineDotDanger {
+  background: rgba($color-error, 0.1);
+}
+
+.timelineDotInfo {
+  background: rgba($color-primary, 0.1);
+}
+
+.timelineDotDefault {
+  background: $color-bg-hover;
+}
+
+.timelineLine {
+  flex: 1;
+  width: 4rpx;
+  background: $color-divider;
+  margin-top: $spacing-xs;
+}
+
+.timelineContent {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1rpx dashed $color-divider;
+
+  .timelineItem:last-child & {
+    border-bottom: none;
+  }
+}
+
+.timelineTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.timelineType {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: 2rpx $spacing-sm;
+  background: $color-bg-hover;
+  border-radius: $radius-xs;
+}
+
+.timelineTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.timelineTitleSuccess {
+  color: $color-success;
+}
+
+.timelineTitleWarning {
+  color: $color-warning;
+}
+
+.timelineTitleDanger {
+  color: $color-error;
+}
+
+.timelineDesc {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+  line-height: 1.6;
+  display: block;
+}
+
+.timelineDetail {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+  line-height: 1.5;
+  display: block;
+}
+
+.timelineMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.timelineOperator {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.timelineTime {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}

@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord, SyncStatus, SearchQuery, DashboardStats, TimeRange, ReviewInfo, ReviewConclusion } from '@/types/audit'
+import type { WaybillInfo, TempSummary, OverTempDetail, AuditRecord, AbnormalItem, TempRecord, SyncStatus, SearchQuery, DashboardStats, TimeRange, ReviewInfo, ReviewConclusion, DisposalInfo, DisposalStatus, TimelineItem, ExportReport } from '@/types/audit'
 
 const STORAGE_KEY = 'cold_chain_audit_records_v1'
 
@@ -361,7 +361,7 @@ const getTimeRangeStart = (timeRange: TimeRange): Date | null => {
 }
 
 export const searchAuditRecords = (query: SearchQuery): AuditRecord[] => {
-  const { keyword = '', status = 'all', timeRange = 'all' } = query
+  const { keyword = '', status = 'all', timeRange = 'all', overTempOnly = false } = query
   const kw = keyword.trim().toLowerCase()
   
   let list = getAuditRecords()
@@ -378,9 +378,15 @@ export const searchAuditRecords = (query: SearchQuery): AuditRecord[] => {
       list = list.filter(r => 
         r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed'
       )
+    } else if (status === 'overTemp') {
+      list = list.filter(r => r.tempSummary.hasOverTemp)
     } else {
       list = list.filter(r => r.status === status)
     }
+  }
+  
+  if (overTempOnly) {
+    list = list.filter(r => r.tempSummary.hasOverTemp)
   }
   
   if (kw) {
@@ -407,7 +413,7 @@ export const getDashboardStats = (timeRange: TimeRange = 'all'): DashboardStats 
   
   const storeMap = new Map<string, { count: number; overTemp: number; syncFailed: number }>()
   const productMap = new Map<string, { count: number; overTemp: number; syncFailed: number }>()
-  const statusMap = new Map<string, { name: string; key: AuditRecord['status']; count: number }>()
+  const statusMap = new Map<string, { name: string; key: AuditRecord['status']; count: number; overTemp: number; syncFailed: number }>()
   
   for (const r of records) {
     const store = storeMap.get(r.storeName) || { count: 0, overTemp: 0, syncFailed: 0 }
@@ -426,9 +432,13 @@ export const getDashboardStats = (timeRange: TimeRange = 'all'): DashboardStats 
     const s = statusMap.get(statusKey) || { 
       name: statusKey === 'normal' ? '正常签收' : statusKey === 'remark' ? '备注签收' : '拒收待复核', 
       key: statusKey, 
-      count: 0 
+      count: 0,
+      overTemp: 0,
+      syncFailed: 0
     }
     s.count++
+    if (r.tempSummary.hasOverTemp) s.overTemp++
+    if (r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed') s.syncFailed++
     statusMap.set(statusKey, s)
   }
   
@@ -507,6 +517,187 @@ export const submitReview = (
   scheduleSave()
   console.log('[MockData] 提交复核:', id, conclusionLabel)
   return auditRecords[idx]
+}
+
+export const submitDisposal = (
+  id: string,
+  status: DisposalStatus,
+  operator: string,
+  remark: string
+): AuditRecord | null => {
+  const idx = auditRecords.findIndex(r => r.id === id)
+  if (idx === -1) return null
+
+  const statusLabel = status === 'stored' ? '已入库'
+    : status === 'returned' ? '已退回'
+    : '待协商'
+
+  const disposalInfo: DisposalInfo = {
+    status,
+    statusLabel,
+    operator,
+    operateTime: new Date().toISOString(),
+    remark
+  }
+
+  auditRecords[idx] = {
+    ...auditRecords[idx],
+    signResult: {
+      ...auditRecords[idx].signResult,
+      disposalInfo
+    }
+  }
+  scheduleSave()
+  console.log('[MockData] 提交处置:', id, statusLabel)
+  return auditRecords[idx]
+}
+
+export const buildTimeline = (record: AuditRecord): TimelineItem[] => {
+  const timeline: TimelineItem[] = []
+  const { waybillInfo, signResult, tempSummary, photos, abnormalItems } = record
+  const syncL = signResult.syncToLogistics || 'success'
+  const syncQ = signResult.syncToQuality || 'success'
+
+  timeline.push({
+    type: 'scan',
+    typeLabel: '扫码验车',
+    title: '扫描运单，验车完成',
+    operator: signResult.operator,
+    operateTime: record.createTime,
+    description: `${waybillInfo.waybillCode} · ${waybillInfo.productName} · ${record.storeName}`,
+    status: tempSummary.hasOverTemp ? 'warning' : 'success',
+    detail: tempSummary.hasOverTemp
+      ? `超温${tempSummary.overTempCount}次，最高温度${tempSummary.maxTemp}℃`
+      : `温度正常，平均温度${tempSummary.avgTemp}℃`
+  })
+
+  timeline.push({
+    type: 'check',
+    typeLabel: '现场核对',
+    title: '现场核对完成',
+    operator: signResult.operator,
+    operateTime: record.createTime,
+    description: `${photos.filter(p => p.url).length}张照片 · ${abnormalItems.filter(a => a.value).length}项异常勾选`,
+    status: abnormalItems.some(a => a.key !== 'normal' && a.value) ? 'danger' : 'success',
+    detail: abnormalItems.filter(a => a.value).map(a => a.label).join('、') || '无异常'
+  })
+
+  timeline.push({
+    type: 'sign',
+    typeLabel: '签收意见',
+    title: signResult.suggestionLabel,
+    operator: signResult.operator,
+    operateTime: signResult.operateTime,
+    description: signResult.remark || '无备注',
+    status: signResult.suggestion === 'normal' ? 'success'
+      : signResult.suggestion === 'remark' ? 'warning'
+      : 'danger'
+  })
+
+  const syncHasFailed = syncL === 'failed' || syncQ === 'failed'
+  const syncHasPending = syncL === 'pending' || syncQ === 'pending'
+  timeline.push({
+    type: 'sync',
+    typeLabel: '通知同步',
+    title: syncHasFailed ? '同步存在失败' : syncHasPending ? '同步进行中' : '全部同步完成',
+    operator: '系统',
+    operateTime: signResult.operateTime,
+    description: `物流客服: ${syncL === 'success' ? '✓已同步' : syncL === 'failed' ? '✗失败' : '◌进行中'} · 品控人员: ${syncQ === 'success' ? '✓已同步' : syncQ === 'failed' ? '✗失败' : '◌进行中'}`,
+    status: syncHasFailed ? 'danger' : syncHasPending ? 'info' : 'success'
+  })
+
+  if (signResult.reviewInfo) {
+    const { reviewInfo } = signResult
+    timeline.push({
+      type: 'review',
+      typeLabel: '稽核复核',
+      title: reviewInfo.conclusionLabel,
+      operator: reviewInfo.reviewer,
+      operateTime: reviewInfo.reviewTime,
+      description: reviewInfo.comment || '无复核说明',
+      status: reviewInfo.conclusion === 'approved' ? 'success'
+        : reviewInfo.conclusion === 'conditional' ? 'warning'
+        : 'danger'
+    })
+  }
+
+  if (signResult.disposalInfo) {
+    const { disposalInfo } = signResult
+    timeline.push({
+      type: 'disposal',
+      typeLabel: '后续处置',
+      title: disposalInfo.statusLabel,
+      operator: disposalInfo.operator,
+      operateTime: disposalInfo.operateTime,
+      description: disposalInfo.remark || '无处置备注',
+      status: disposalInfo.status === 'stored' ? 'success'
+        : disposalInfo.status === 'returned' ? 'danger'
+        : 'info'
+    })
+  }
+
+  return timeline.sort((a, b) => new Date(a.operateTime).getTime() - new Date(b.operateTime).getTime())
+}
+
+export const generateExportReport = (
+  records: AuditRecord[],
+  filters: SearchQuery
+): ExportReport => {
+  const overTempCount = records.filter(r => r.tempSummary.hasOverTemp).length
+  const syncFailedCount = records.filter(r =>
+    r.signResult.syncToLogistics === 'failed' || r.signResult.syncToQuality === 'failed'
+  ).length
+  const normalCount = records.filter(r => r.status === 'normal').length
+  const remarkCount = records.filter(r => r.status === 'remark').length
+  const rejectCount = records.filter(r => r.status === 'reject').length
+
+  const timeRangeLabel = filters.timeRange === 'today' ? '今天'
+    : filters.timeRange === 'week' ? '近7天'
+    : filters.timeRange === 'month' ? '近30天'
+    : '全部时间'
+
+  const statusLabel = filters.status === 'syncFailed' ? '同步失败'
+    : filters.status === 'overTemp' ? '存在超温'
+    : filters.status === 'normal' ? '正常签收'
+    : filters.status === 'remark' ? '备注签收'
+    : filters.status === 'reject' ? '拒收待复核'
+    : '全部状态'
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      totalCount: records.length,
+      overTempCount,
+      syncFailedCount,
+      normalCount,
+      remarkCount,
+      rejectCount
+    },
+    filters: {
+      keyword: filters.keyword || '',
+      status: statusLabel,
+      timeRange: timeRangeLabel,
+      overTempOnly: filters.overTempOnly || false
+    },
+    records: records.map(r => {
+      const rL = r.signResult.syncToLogistics || 'success'
+      const rQ = r.signResult.syncToQuality || 'success'
+      return {
+        waybillCode: r.waybillInfo.waybillCode,
+        productName: r.waybillInfo.productName,
+        storeName: r.storeName,
+        operateTime: r.signResult.operateTime,
+        suggestionLabel: r.signResult.suggestionLabel,
+        hasOverTemp: r.tempSummary.hasOverTemp,
+        maxTemp: r.tempSummary.maxTemp,
+        syncLogistics: rL === 'success' ? '已同步' : rL === 'failed' ? '失败' : '进行中',
+        syncQuality: rQ === 'success' ? '已同步' : rQ === 'failed' ? '失败' : '进行中',
+        reviewConclusion: r.signResult.reviewInfo?.conclusionLabel || '',
+        disposalStatus: r.signResult.disposalInfo?.statusLabel || '',
+        remark: r.signResult.remark || ''
+      }
+    })
+  }
 }
 
 export const mockUserInfo = {

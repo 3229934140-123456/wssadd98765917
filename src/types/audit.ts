@@ -65,6 +65,16 @@ export interface ReviewInfo {
   comment: string
 }
 
+export type DisposalStatus = 'stored' | 'returned' | 'negotiating'
+
+export interface DisposalInfo {
+  status: DisposalStatus
+  statusLabel: string
+  operator: string
+  operateTime: string
+  remark: string
+}
+
 export interface SignResult {
   suggestion: SignSuggestion
   suggestionLabel: string
@@ -74,6 +84,52 @@ export interface SignResult {
   syncToLogistics?: SyncStatus
   syncToQuality?: SyncStatus
   reviewInfo?: ReviewInfo
+  disposalInfo?: DisposalInfo
+}
+
+export type TimelineStepType = 'scan' | 'check' | 'sign' | 'sync' | 'review' | 'disposal'
+
+export interface TimelineItem {
+  type: TimelineStepType
+  typeLabel: string
+  title: string
+  operator: string
+  operateTime: string
+  description: string
+  status?: 'success' | 'warning' | 'danger' | 'info'
+  detail?: string
+}
+
+export interface ExportReport {
+  generatedAt: string
+  summary: {
+    totalCount: number
+    overTempCount: number
+    syncFailedCount: number
+    normalCount: number
+    remarkCount: number
+    rejectCount: number
+  }
+  filters: {
+    keyword?: string
+    status?: string
+    timeRange?: string
+    overTempOnly?: boolean
+  }
+  records: Array<{
+    waybillCode: string
+    productName: string
+    storeName: string
+    operateTime: string
+    suggestionLabel: string
+    hasOverTemp: boolean
+    maxTemp: number
+    syncLogistics: string
+    syncQuality: string
+    reviewConclusion?: string
+    disposalStatus?: string
+    remark: string
+  }>
 }
 
 export type TimeRange = 'today' | 'week' | 'month' | 'all'
@@ -99,11 +155,12 @@ export interface DashboardStats {
   syncFailedCount: number
   byStore: Array<{ name: string; count: number; overTemp: number; syncFailed: number }>
   byProduct: Array<{ name: string; count: number; overTemp: number; syncFailed: number }>
-  byStatus: Array<{ name: string; key: SignSuggestion; count: number }>
+  byStatus: Array<{ name: string; key: SignSuggestion; count: number; overTemp: number; syncFailed: number }>
 }
 
 export interface SearchQuery {
   keyword?: string
-  status?: SignSuggestion | 'syncFailed' | 'all'
+  status?: SignSuggestion | 'syncFailed' | 'overTemp' | 'all'
   timeRange?: TimeRange
+  overTempOnly?: boolean
 }

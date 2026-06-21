@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { View, Text, Image, Button, Textarea, Input } from '@tarojs/components'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { View, Text, Image, Button, Textarea, Input, ScrollView } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import classnames from 'classnames'
 import styles from './index.module.scss'
 import StatusBadge from '@/components/StatusBadge'
-import { getAuditRecordById, updateRecordSyncStatus, submitReview } from '@/data/mockData'
+import { getAuditRecordById, updateRecordSyncStatus, submitReview, submitDisposal, buildTimeline } from '@/data/mockData'
 import { formatTime, formatFullDateTime, getSignStatusLabel } from '@/utils/temperature'
-import type { AuditRecord, SyncStatus, ReviewConclusion } from '@/types/audit'
+import type { AuditRecord, SyncStatus, ReviewConclusion, DisposalStatus, TimelineItem } from '@/types/audit'
 
 const simulateRetrySync = async (failRate: number = 0.1): Promise<SyncStatus> => {
   await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 800))
@@ -19,6 +19,12 @@ const reviewOptions: Array<{ value: ReviewConclusion; label: string; desc: strin
   { value: 'rejected', label: '复核驳回', desc: '货品不可接收，退回处理' }
 ]
 
+const disposalOptions: Array<{ value: DisposalStatus; label: string; desc: string }> = [
+  { value: 'stored', label: '已入库', desc: '货品已正常入库' },
+  { value: 'returned', label: '已退回', desc: '货品已退回供应商/物流' },
+  { value: 'negotiating', label: '待协商', desc: '与物流/供应商协商中' }
+]
+
 const DetailPage: React.FC = () => {
   const [record, setRecord] = useState<AuditRecord | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,6 +34,12 @@ const DetailPage: React.FC = () => {
   const [reviewer, setReviewer] = useState('')
   const [reviewComment, setReviewComment] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [showDisposalModal, setShowDisposalModal] = useState(false)
+  const [disposalStatus, setDisposalStatus] = useState<DisposalStatus>('stored')
+  const [disposalOperator, setDisposalOperator] = useState('')
+  const [disposalRemark, setDisposalRemark] = useState('')
+  const [submittingDisposal, setSubmittingDisposal] = useState(false)
+  const [showTimeline, setShowTimeline] = useState(true)
   const router = useRouter()
 
   const loadRecord = useCallback(async () => {
@@ -120,6 +132,41 @@ const DetailPage: React.FC = () => {
     }
   }, [])
 
+  const handleOpenDisposal = useCallback(() => {
+    if (!record) return
+    setDisposalStatus('stored')
+    setDisposalOperator('')
+    setDisposalRemark('')
+    setShowDisposalModal(true)
+  }, [record])
+
+  const handleSubmitDisposal = useCallback(async () => {
+    if (!record || submittingDisposal) return
+    if (!disposalOperator.trim()) {
+      Taro.showToast({ title: '请输入处置人', icon: 'none' })
+      return
+    }
+    setSubmittingDisposal(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      const updated = submitDisposal(record.id, disposalStatus, disposalOperator.trim(), disposalRemark.trim())
+      if (updated) {
+        setRecord(updated)
+        setShowDisposalModal(false)
+        Taro.showToast({ title: '处置状态更新成功', icon: 'success' })
+      }
+    } catch (err) {
+      Taro.showToast({ title: '处置状态更新失败', icon: 'none' })
+    } finally {
+      setSubmittingDisposal(false)
+    }
+  }, [record, disposalStatus, disposalOperator, disposalRemark, submittingDisposal])
+
+  const timeline: TimelineItem[] = useMemo(() => {
+    if (!record) return []
+    return buildTimeline(record)
+  }, [record])
+
   if (loading) {
     return (
       <View className={styles.page}>
@@ -139,6 +186,8 @@ const DetailPage: React.FC = () => {
   const statusIcon = { normal: '✅', remark: '⚠️', reject: '🚫' }[record.status]
   const canReview = record.status === 'reject' || record.status === 'remark'
   const hasReview = !!record.signResult.reviewInfo
+  const canDisposal = hasReview
+  const hasDisposal = !!record.signResult.disposalInfo
   const syncL = record.signResult.syncToLogistics || 'success'
   const syncQ = record.signResult.syncToQuality || 'success'
 
@@ -388,6 +437,90 @@ const DetailPage: React.FC = () => {
           </View>
         )}
 
+        {hasDisposal && (
+          <View className={styles.disposalSection}>
+            <Text className={styles.sectionTitle}>后续处置</Text>
+            <View className={styles.resultRow}>
+              <Text className={styles.resultLabel}>处置状态</Text>
+              <Text className={classnames(
+                styles.resultValue,
+                record.signResult.disposalInfo!.status === 'stored' && styles.syncSuccessText,
+                record.signResult.disposalInfo!.status === 'returned' && styles.syncFailedText,
+                record.signResult.disposalInfo!.status === 'negotiating' && styles.reviewConditionalText
+              )}>
+                {record.signResult.disposalInfo!.statusLabel}
+              </Text>
+            </View>
+            <View className={styles.resultRow}>
+              <Text className={styles.resultLabel}>处置人</Text>
+              <Text className={styles.resultValue}>{record.signResult.disposalInfo!.operator}</Text>
+            </View>
+            <View className={styles.resultRow}>
+              <Text className={styles.resultLabel}>处置时间</Text>
+              <Text className={styles.resultValue}>{formatFullDateTime(record.signResult.disposalInfo!.operateTime)}</Text>
+            </View>
+            {record.signResult.disposalInfo!.remark && (
+              <View className={styles.resultRow}>
+                <Text className={styles.resultLabel}>处置备注</Text>
+                <Text className={classnames(styles.resultValue, styles.remarkValue)}>
+                  {record.signResult.disposalInfo!.remark}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        <View className={styles.timelineSection}>
+          <View className={styles.timelineHeader} onClick={() => setShowTimeline(!showTimeline)}>
+            <Text className={styles.sectionTitle}>🕒 完整追溯时间线</Text>
+            <Text className={styles.timelineToggle}>{showTimeline ? '收起' : '展开'}</Text>
+          </View>
+          {showTimeline && timeline.length > 0 && (
+            <View className={styles.timelineList}>
+              {timeline.map((item, index) => (
+                <View key={index} className={styles.timelineItem}>
+                  <View className={styles.timelineLeft}>
+                    <View className={classnames(
+                      styles.timelineDot,
+                      item.status === 'success' && styles.timelineDotSuccess,
+                      item.status === 'warning' && styles.timelineDotWarning,
+                      item.status === 'danger' && styles.timelineDotDanger,
+                      item.status === 'info' && styles.timelineDotInfo,
+                      !item.status && styles.timelineDotDefault
+                    )}>
+                      <Text className={styles.timelineDotText}>
+                        {item.type === 'scan' ? '📱' :
+                         item.type === 'check' ? '📷' :
+                         item.type === 'sign' ? '✅' :
+                         item.type === 'sync' ? '📡' :
+                         item.type === 'review' ? '📋' : '📦'}
+                      </Text>
+                    </View>
+                    {index < timeline.length - 1 && <View className={styles.timelineLine} />}
+                  </View>
+                  <View className={styles.timelineContent}>
+                    <View className={styles.timelineTitleRow}>
+                      <Text className={styles.timelineType}>{item.typeLabel}</Text>
+                      <Text className={classnames(
+                        styles.timelineTitle,
+                        item.status === 'success' && styles.timelineTitleSuccess,
+                        item.status === 'warning' && styles.timelineTitleWarning,
+                        item.status === 'danger' && styles.timelineTitleDanger
+                      )}>{item.title}</Text>
+                    </View>
+                    <Text className={styles.timelineDesc}>{item.description}</Text>
+                    {item.detail && <Text className={styles.timelineDetail}>{item.detail}</Text>}
+                    <View className={styles.timelineMeta}>
+                      <Text className={styles.timelineOperator}>{item.operator}</Text>
+                      <Text className={styles.timelineTime}>{formatFullDateTime(item.operateTime)}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         {canReview && !hasReview && (
           <View className={styles.reviewAction}>
             <Button className={styles.reviewBtn} onClick={handleOpenReview}>
@@ -396,16 +529,30 @@ const DetailPage: React.FC = () => {
           </View>
         )}
 
+        {canDisposal && !hasDisposal && (
+          <View className={styles.reviewAction}>
+            <Button className={styles.disposalBtn} onClick={handleOpenDisposal}>
+              📦 标记处置状态
+            </Button>
+          </View>
+        )}
+
         {canReview && hasReview && (
           <View className={styles.reviewAction}>
-            <Text className={styles.reviewDone}>已复核完成</Text>
+            {hasDisposal ? (
+              <Text className={styles.reviewDone}>复核与处置均已完成</Text>
+            ) : (
+              <Button className={styles.disposalBtnSmall} onClick={handleOpenDisposal}>
+                📦 补记后续处置
+              </Button>
+            )}
           </View>
         )}
       </View>
 
       {showReviewModal && (
-        <View className={styles.modalMask}>
-          <View className={styles.modalContent}>
+        <View className={styles.modalMask} onClick={() => setShowReviewModal(false)}>
+          <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <Text className={styles.modalTitle}>填写复核结论</Text>
             <Text className={styles.modalSubtitle}>
               {record.waybillInfo.productName} · {record.signResult.suggestionLabel}
@@ -462,6 +609,71 @@ const DetailPage: React.FC = () => {
                 disabled={submittingReview || !reviewer.trim()}
               >
                 {submittingReview ? '提交中' : '提交复核'}
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {showDisposalModal && (
+        <View className={styles.modalMask} onClick={() => setShowDisposalModal(false)}>
+          <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <Text className={styles.modalTitle}>后续处置</Text>
+            <Text className={styles.modalSubtitle}>
+              {record.waybillInfo.productName} · {record.signResult.reviewInfo?.conclusionLabel || record.signResult.suggestionLabel}
+            </Text>
+
+            <View className={styles.reviewOptionList}>
+              {disposalOptions.map(opt => (
+                <View
+                  key={opt.value}
+                  className={classnames(
+                    styles.reviewOption,
+                    disposalStatus === opt.value && styles.reviewOptionActive,
+                    opt.value === 'stored' && disposalStatus === opt.value && styles.reviewOptionApproved,
+                    opt.value === 'returned' && disposalStatus === opt.value && styles.reviewOptionRejected,
+                    opt.value === 'negotiating' && disposalStatus === opt.value && styles.reviewOptionConditional
+                  )}
+                  onClick={() => setDisposalStatus(opt.value)}
+                >
+                  <Text className={styles.reviewOptionLabel}>{opt.label}</Text>
+                  <Text className={styles.reviewOptionDesc}>{opt.desc}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View className={styles.modalField}>
+              <Text className={styles.modalFieldLabel}>处置人 *</Text>
+              <Input
+                className={styles.modalInput}
+                placeholder='请输入处置人姓名'
+                value={disposalOperator}
+                onInput={(e) => setDisposalOperator(e.detail.value)}
+              />
+            </View>
+
+            <View className={styles.modalField}>
+              <Text className={styles.modalFieldLabel}>处置备注</Text>
+              <Textarea
+                className={styles.modalTextarea}
+                placeholder='请输入处置备注（可选）'
+                value={disposalRemark}
+                onInput={(e) => setDisposalRemark(e.detail.value)}
+                maxlength={200}
+              />
+            </View>
+
+            <View className={styles.modalActions}>
+              <Button className={styles.modalCancel} onClick={() => setShowDisposalModal(false)}>
+                取消
+              </Button>
+              <Button
+                className={classnames(styles.modalConfirm, submittingDisposal && styles.modalConfirmDisabled)}
+                onClick={handleSubmitDisposal}
+                loading={submittingDisposal}
+                disabled={submittingDisposal || !disposalOperator.trim()}
+              >
+                {submittingDisposal ? '提交中' : '确认处置'}
               </Button>
             </View>
           </View>
